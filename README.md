@@ -1,6 +1,6 @@
 # Wasm Browser API Extended (BAEX)
 
-![bee-holding-axe](./bee-holding-axe.png)
+![bee-holding-axe](./bee-holding-axe.jpg)
 
 A high-performance web framework bridging Rust/WASM state management with a reactive TypeScript frontend.
 
