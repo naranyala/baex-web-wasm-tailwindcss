@@ -1,0 +1,28 @@
+{
+  "name": "wasmfirst-web-browserapiextended",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "rsbuild build",
+    "check": "biome check --write",
+    "dev": "rsbuild --open",
+    "format": "biome format --write",
+    "preview": "rsbuild preview",
+    "test": "vitest run",
+    "test:wasm": "cd crates/web-core && wasm-pack test --node"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "2.4.16",
+    "@rsbuild/core": "^2.0.11",
+    "@tailwindcss/postcss": "^4.3.0",
+    "happy-dom": "^20.10.1",
+    "rsbuild-plugin-wasmpack": "^2.0.0",
+    "tailwindcss": "^4.3.0",
+    "typescript": "^6.0.3",
+    "vitest": "^4.1.8"
+  },
+  "dependencies": {
+    "shiki": "^4.2.0"
+  }
+}
