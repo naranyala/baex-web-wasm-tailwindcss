@@ -22,6 +22,7 @@ import initUtils, {
 } from '../pkgs/baex-web-utils/baex_web_utils.js';
 import './components/app.js';
 import './components/status-footer.js';
+import './components/status-modal.js';
 import apiManifest from './api-manifest.json';
 
 const rootEl = document.querySelector('#root');
@@ -56,5 +57,5 @@ init().then(async () => {
   (window as any).serializeProperty = serialize_property;
   (window as any).deserializeProperty = deserialize_property;
 
-  rootEl.innerHTML = '<baex-app></baex-app><baex-status-footer></baex-status-footer>';
+  rootEl.innerHTML = '<baex-app></baex-app><baex-status-footer></baex-status-footer><baex-status-modal></baex-status-modal>';
 });

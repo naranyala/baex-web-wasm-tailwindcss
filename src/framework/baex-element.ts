@@ -238,10 +238,24 @@ export class BaexElement extends HTMLElement {
 
   private _initializeNodeMap(bindings: Binding[]): void {
     this._nodeMap.clear();
-    for (const b of bindings) {
-      const el = this.querySelector(`[data-baex="${b.marker}"]`);
-      if (el) {
-        this._nodeMap.set(b.marker, el);
+    
+    // Use TreeWalker to efficiently find all nodes with data-baex attributes
+    const walker = document.createTreeWalker(this, NodeFilter.SHOW_ELEMENT, {
+      acceptNode: (node: Node) => {
+        return (node as HTMLElement).hasAttribute('data-baex')
+          ? NodeFilter.FILTER_ACCEPT
+          : NodeFilter.FILTER_SKIP;
+      }
+    });
+
+    let node;
+    while ((node = walker.nextNode())) {
+      const el = node as HTMLElement;
+      const marker = el.getAttribute('data-baex');
+      if (marker) {
+        this._nodeMap.set(marker, el);
+        // Clean up the DOM by removing the marker
+        el.removeAttribute('data-baex');
       }
     }
   }

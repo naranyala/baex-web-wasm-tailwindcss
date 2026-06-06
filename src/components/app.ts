@@ -1,10 +1,13 @@
+
 import { BaexElement, defineComponent, html } from '../framework/index.js';
 import { Raw, when } from '../framework/template.js';
 import { BaexCodeBlock } from './code-block.js';
-import { BaexNav, tabsSignal, viewSignal } from './nav.js';
+import './accordion.js';
+import './shiki-codeblock.js';
+import './leaflet-map.js';
+import { viewSignal } from './nav.js';
 
 defineComponent('baex-code-block', BaexCodeBlock);
-defineComponent('baex-nav', BaexNav);
 
 interface ApiItem {
   name: string;
@@ -157,58 +160,29 @@ s.value = 1 // logs 1`,
 const WASM_ITEMS = API_ITEMS.filter((i) => i.group === 'wasm');
 const FRAMEWORK_ITEMS = API_ITEMS.filter((i) => i.group === 'framework');
 
+
+const MENU_CATEGORIES = [
+  { id: 'accordion', name: 'Accordion Components', color: 'purple' },
+  { id: 'codeblock', name: 'Codeblock Demo', color: 'orange' },
+  { id: 'leaflet', name: 'Leaflet Demos', color: 'green' },
+];
+
 export class AppElement extends BaexElement {
   static properties = {
     view: { type: String },
   };
-  static state = {
-    searchQuery: { type: String },
-  };
+  
   view = 'home';
-  searchQuery = '';
-  private _copyTimer: number | null = null;
 
   onConnected() {
-    this.addEventListener('click', this._handleClick);
-    this.addEventListener('input', this._handleInput);
     this.track(viewSignal, (val) => {
       this.view = val as string;
       this.requestUpdate(true);
     });
-
-    if (!document.querySelector('baex-nav')) {
-      const nav = document.createElement('baex-nav');
-      document.body.appendChild(nav);
-    }
   }
 
-  private _openTab = (id: string, name: string) => {
-    const currentTabs = tabsSignal.value as { id: string; name: string }[];
-    if (!currentTabs.find((t) => t.id === id)) {
-      tabsSignal.value = [...currentTabs, { id, name }];
-    }
-    viewSignal.value = id;
-  };
-
-  onDisconnected() {
-    this.removeEventListener('click', this._handleClick);
-    this.removeEventListener('input', this._handleInput);
-    if (this._copyTimer !== null) {
-      clearTimeout(this._copyTimer);
-      this._copyTimer = null;
-    }
-  }
-
-  private _handleInput = (e: Event) => {
-    const target = e.target as HTMLInputElement;
-    if (target.matches('[data-search]')) {
-      this.searchQuery = target.value.toLowerCase();
-    }
-  };
-
-  private _fuzzyMatch = (str: string, query: string): boolean => {
-    if (!query) return true;
-    return str.toLowerCase().includes(query);
+  private _setView = (view: string) => {
+    viewSignal.value = view;
   };
 
   render() {
@@ -248,111 +222,86 @@ export class AppElement extends BaexElement {
     };
 
     return html`
-      <div class="flex flex-col items-center min-h-screen px-4 py-8">
-        <div class="w-full max-w-2xl mt-24">
-          <h1 class="text-3xl font-bold text-center mb-1">Wasm Browser API Extended</h1>
-          <p class="text-[1.1rem] text-center text-white/60 mt-0 mb-6">BAEX framework × Rust/Wasm</p>
+      <div class="flex flex-row min-h-screen">
+        <aside class="w-64 border-r border-white/10 p-6 pt-10 bg-[#020917]/50">
+          <h1 class="text-lg font-bold text-white mb-8 cursor-pointer" @click=${() => this._setView('home')}>BAEX Docs</h1>
+          <div class="flex flex-col gap-2">
+            ${MENU_CATEGORIES.map((item) => html`
+              <button
+                @click=${() => this._setView(item.id)}
+                class="flex items-center gap-3 text-sm text-left p-3 rounded-lg hover:bg-white/5 text-white/70 hover:text-white transition-all w-full"
+              >
+                <span class="w-2 h-2 rounded-full bg-${item.color}-400"></span>
+                ${item.name}
+              </button>
+            `)}
+          </div>
+        </aside>
 
+        <main class="flex-1 p-10">
           ${when(
             this.view === 'home',
             html`
-              <div class="mt-6">
-                <div class="relative mb-6">
-                  <input 
-                    data-search
-                    type="text" 
-                    placeholder="Search features..." 
-                    class="w-full px-4 py-3 pl-10 rounded-xl bg-white/[0.03] border border-white/[0.08] text-white placeholder-white/40 focus:outline-none focus:border-blue-500/50 focus:bg-white/[0.05] transition-all"
-                  />
-                  <span class="absolute left-3 top-1/2 -translate-y-1/2 text-white/40">🔍</span>
-                </div>
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  ${[
-                    {
-                      id: 'wasm',
-                      name: 'Wasm Primitives',
-                      desc: 'Raw functions exposed by the Rust/WASM web-core module.',
-                      color: 'amber',
-                    },
-                    {
-                      id: 'framework',
-                      name: 'Framework Primitives',
-                      desc: 'BAEX (Browser API Extended) framework built on top of WASM.',
-                      color: 'blue',
-                    },
-                    {
-                      id: 'props',
-                      name: 'Reactive Properties',
-                      desc: 'High-performance reactive state with fine-grained updates.',
-                      color: 'green',
-                    },
-                    {
-                      id: 'elements',
-                      name: 'Custom Elements',
-                      desc: 'Extend HTMLElement with the BaexElement base class.',
-                      color: 'purple',
-                    },
-                    {
-                      id: 'templates',
-                      name: 'Template Engine',
-                      desc: 'Tagged template literals with HTML auto-escaping.',
-                      color: 'pink',
-                    },
-                    {
-                      id: 'signals',
-                      name: 'Signal API',
-                      desc: 'Global reactive value store bridged with Rust.',
-                      color: 'cyan',
-                    },
-                  ]
-                    .filter((item) =>
-                      this._fuzzyMatch(item.name + item.desc, this.searchQuery),
-                    )
-                    .map(
-                      (item) => html`
-                      <div 
-                        @click=${() => this._openTab(item.id, item.name)}
-                        class="p-4 rounded-xl bg-white/[0.03] border border-white/[0.06] hover:bg-white/[0.06] hover:border-white/20 cursor-pointer transition-all duration-200"
-                      >
-                        <div class="flex items-center gap-2 mb-2">
-                          <span class="w-2 h-2 rounded-full bg-${item.color}-400"></span>
-                          <h3 class="font-semibold text-sm">${item.name}</h3>
-                        </div>
-                        <p class="text-xs text-white/50 leading-relaxed">${item.desc}</p>
-                      </div>
-                    `,
-                    )}
+              <div class="max-w-5xl">
+                <h2 class="text-3xl font-bold mb-8 text-white">Dashboard</h2>
+                <div class="p-6 rounded-2xl bg-white/[0.03] border border-white/[0.06]">
+                  <h3 class="font-semibold text-white mb-2">Welcome</h3>
+                  <p class="text-sm text-white/50">Select "Accordion Components" from the sidebar.</p>
                 </div>
               </div>
             `,
-            when(
-              this.view === 'wasm',
-              html`
-                <div class="text-[1.1rem] font-bold text-amber-400 mt-6 mb-3 pb-2 border-b border-white/10">Non-framework Primitives</div>
-                <p class="text-sm text-white/50 mb-4">
-                  Raw functions exposed on <code class="text-[0.8rem] bg-white/10 px-1 py-0.5 rounded">window.*</code>
-                  by the Rust/WASM <code class="text-[0.8rem] bg-white/10 px-1 py-0.5 rounded">web-core</code> module
-                </p>
-                ${WASM_ITEMS.map((item, i) => renderItem(item, i))}
-              `,
-              when(
-                this.view === 'framework',
-                html`
-                  <div class="text-[1.1rem] font-bold text-blue-400 mt-6 mb-3 pb-2 border-b border-white/10">Framework Primitives</div>
-                  <p class="text-sm text-white/50 mb-4">BAEX (Browser API Extended) framework built on top of the WASM primitives</p>
-                  ${FRAMEWORK_ITEMS.map((item, i) => renderItem(item, i + WASM_ITEMS.length))}
-                `,
-                html`
-                  <div class="text-[1.1rem] font-bold text-white/80 mt-6 mb-3 pb-2 border-b border-white/10">${this.view}</div>
-                  <p class="text-sm text-white/50 mb-4">This is a dynamically opened tab from the Home grid.</p>
-                `,
-              ),
-            ),
-          )}
-        </div>
-      </div>
-    `;
-  }
-}
 
-defineComponent('baex-app', AppElement);
+                          when(
+                            this.view === 'accordion',
+                            html`
+                              <div class="max-w-4xl">
+                                <div class="text-[1.1rem] font-bold text-purple-400 mb-6 pb-2 border-b border-white/10">Accordion Demo</div>
+                                <div class="space-y-4 mb-8">
+                                  <baex-accordion-item title="Section 1">Content for section 1</baex-accordion-item>
+                                  <baex-accordion-item title="Section 2">Content for section 2</baex-accordion-item>
+                                </div>
+                              </div>
+                            `,
+                            when(
+                              this.view === 'codeblock',
+                              html`
+                                <div class="max-w-4xl">
+                                  <div class="text-[1.1rem] font-bold text-orange-400 mb-6 pb-2 border-b border-white/10">Shiki Code Highlighting</div>
+                                  <baex-shiki-codeblock 
+                                    lang="typescript"
+                                    code="function helloWorld() {
+                            console.log('Hello from Shiki!');
+                            return { success: true };
+                            }"></baex-shiki-codeblock>
+                                </div>
+                              `,
+                              when(
+                                this.view === 'leaflet',
+                                html`
+                                  <div class="max-w-6xl">
+                                    <div class="text-[1.1rem] font-bold text-green-400 mb-6 pb-2 border-b border-white/10">Leaflet Map Demos</div>
+                                    <div class="grid grid-cols-2 gap-6">
+                                        <baex-leaflet-map center="51.505, -0.09" zoom="13"></baex-leaflet-map>
+                                        <baex-leaflet-map center="48.8566, 2.3522" zoom="12"></baex-leaflet-map>
+                                        <baex-leaflet-map center="34.0522, -118.2437" zoom="10"></baex-leaflet-map>
+                                        <baex-leaflet-map center="35.6762, 139.6503" zoom="11"></baex-leaflet-map>
+                                    </div>
+                                  </div>
+                                `,
+                                html`
+                                  <div class="max-w-4xl">
+                                    <div class="text-[1.1rem] font-bold text-white/80 mb-3 pb-2 border-b border-white/10">${this.view}</div>
+                                    <p class="text-sm text-white/50 mb-4">Documentation for ${this.view}.</p>
+                                  </div>
+                                `
+                              )
+                            )
+                          )
+                        )}
+                      </main>
+                    </div>
+                  `;
+                }
+              }
+
+              defineComponent('baex-app', AppElement);
