@@ -4,6 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "prebuild": "bun run scripts/generate-api-manifest.ts",
     "build": "rsbuild build",
     "check": "biome check --write",
     "dev": "rsbuild",

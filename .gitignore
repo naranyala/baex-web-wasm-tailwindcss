@@ -2,6 +2,9 @@
 node_modules/
 .bun-install/
 
+crates/web-core/target/
+crates/web-utils/target/
+
 # Build output
 dist/
 .rsbuild/

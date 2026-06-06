@@ -1,5 +1,4 @@
 import './index.css';
-// @ts-expect-error
 import init, {
   clear_component_changed_properties,
   create_signal,
@@ -17,13 +16,27 @@ import init, {
   set_signal,
   update_component_property,
 } from '../pkgs/web-core/web_core.js';
+import initUtils, {
+  add,
+  reverse_string,
+} from '../pkgs/baex-web-utils/baex_web_utils.js';
 import './components/app.js';
+import './components/status-footer.js';
+import apiManifest from './api-manifest.json';
 
 const rootEl = document.querySelector('#root');
 if (!rootEl) throw new Error('#root not found');
 
-init().then(() => {
+init().then(async () => {
+  await initUtils();
   register_globals();
+
+  (window as any).utils = {
+    add,
+    reverseString: reverse_string,
+  };
+
+  (window as any).baexPrimitives = apiManifest.primitives;
 
   // Bind framework core functions to window for BaexElement access
   (window as any).register_component = register_component;
@@ -43,5 +56,5 @@ init().then(() => {
   (window as any).serializeProperty = serialize_property;
   (window as any).deserializeProperty = deserialize_property;
 
-  rootEl.innerHTML = '<baex-app></baex-app>';
+  rootEl.innerHTML = '<baex-app></baex-app><baex-status-footer></baex-status-footer>';
 });

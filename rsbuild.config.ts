@@ -10,6 +10,10 @@ export default defineConfig({
           path: './crates/web-core',
           target: 'web',
         },
+        {
+          path: './crates/web-utils',
+          target: 'web',
+        },
       ],
     }),
   ],

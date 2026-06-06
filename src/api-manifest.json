@@ -1,0 +1,24 @@
+{
+  "primitives": [
+    "register_component",
+    "update_component_property",
+    "get_component_property",
+    "get_component_changed_properties",
+    "clear_component_changed_properties",
+    "remove_component",
+    "create_signal",
+    "get_signal",
+    "set_signal",
+    "on_signal_change",
+    "process_template",
+    "reset_binding_counter",
+    "resolve_observed_attributes",
+    "serialize_property",
+    "deserialize_property",
+    "register_globals"
+  ],
+  "utils": [
+    "reverse_string",
+    "add"
+  ]
+}
