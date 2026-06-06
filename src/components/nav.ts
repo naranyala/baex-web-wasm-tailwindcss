@@ -94,7 +94,8 @@ export class BaexNav extends BaexElement {
   };
 
   render() {
-    const homeWidth = 100 / (this.tabs.length + 1);
+    const tabs = this.tabs || [];
+    const homeWidth = 100 / (tabs.length + 1);
 
     return html`
       <nav class="fixed top-0 left-0 right-0 z-50 flex justify-center p-4 bg-[#020917]/80 backdrop-blur-md">
@@ -113,8 +114,8 @@ export class BaexNav extends BaexElement {
             </button>
           </div>
           ${
-            this.tabs.length > 0
-              ? this.tabs.map((tab) =>
+            tabs.length > 0
+              ? tabs.map((tab) =>
                   Raw(`
                 <div data-view="${tab.id}" class="nav-btn-wrapper relative flex items-center group">
                   <button class="nav-btn relative px-5 py-2 text-sm font-medium transition-colors duration-200 text-white/40 hover:text-white">

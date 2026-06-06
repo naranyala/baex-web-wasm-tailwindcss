@@ -1,26 +1,17 @@
-export interface EventBinding {
-  marker: string;
-  type: 'event';
-  eventName: string;
-  value: EventListener;
+import { Blueprint, Binding, BlueprintSchema } from "./ir";
+
+const DEBUG = true;
+
+function logDebug(msg: string) {
+  if (DEBUG) {
+    console.log(`[BAEX-DEBUG-TS] ${msg}`);
+  }
 }
-export interface PropertyBinding {
-  marker: string;
-  type: 'property';
-  propName: string;
-  value: unknown;
-}
-export interface BoolBinding {
-  marker: string;
-  type: 'bool';
-  attrName: string;
-  value: unknown;
-}
-export type Binding = EventBinding | PropertyBinding | BoolBinding;
 
 export interface TemplateResult {
   html: string;
   bindings: Binding[];
+  blueprint: Blueprint;
 }
 
 export const Raw = (value: string) => ({ __raw: true, value });
@@ -48,6 +39,7 @@ interface ProcessedBinding {
 interface WasmTemplateResult {
   html: string;
   bindings: ProcessedBinding[];
+  blueprint: unknown;
 }
 
 function isSignalLike(v: unknown): v is { value: unknown } {
@@ -58,6 +50,7 @@ export function html(
   strings: TemplateStringsArray,
   ...values: unknown[]
 ): TemplateResult {
+  logDebug('Phase 1: Starting html tagged template');
   const nestedBindings: Binding[] = [];
 
   const processValue = (v: unknown): unknown => {
@@ -86,6 +79,7 @@ export function html(
   };
 
   const processedValues = values.map(processValue);
+  logDebug('Phase 2: Values processed');
 
   const raw = (
     window as unknown as Record<
@@ -107,8 +101,16 @@ export function html(
     }
     return b as Binding;
   });
+  logDebug('Phase 3: Bindings resolved from WASM result');
 
-  return { html: raw.html, bindings: [...bindings, ...nestedBindings] };
+  // Validate Blueprint structure from WASM
+  const validatedBlueprint = BlueprintSchema.parse(raw.blueprint);
+
+  return { 
+    html: raw.html, 
+    bindings: [...bindings, ...nestedBindings],
+    blueprint: validatedBlueprint
+  };
 }
 
 export function css(

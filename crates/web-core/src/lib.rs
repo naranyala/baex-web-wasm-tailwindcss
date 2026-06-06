@@ -1,7 +1,43 @@
+use js_sys::{Array, Object, Reflect};
+use serde::{Deserialize, Serialize};
 use std::cell::RefCell;
 use std::collections::HashMap;
 use wasm_bindgen::prelude::*;
 use web_sys::window;
+
+#[derive(Serialize, Deserialize)]
+#[serde(rename_all = "lowercase")]
+enum BlueprintNodeType {
+    Text,
+    Element,
+}
+
+#[derive(Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct BlueprintAttribute {
+    name: String,
+    value: String,
+    is_dynamic: bool,
+    marker: Option<String>,
+}
+
+#[derive(Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct BlueprintNode {
+    node_type: BlueprintNodeType,
+    tag: Option<String>,
+    text_content: Option<String>,
+    attributes: Vec<BlueprintAttribute>,
+    children: Vec<BlueprintNode>,
+}
+
+#[derive(Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct Blueprint {
+    root: BlueprintNode,
+    version: String,
+    raw_html: String,
+}
 
 thread_local! {
     static SIGNAL_VALUES: RefCell<HashMap<String, JsValue>> = RefCell::new(HashMap::new());
@@ -26,7 +62,15 @@ impl ComponentState {
     }
 }
 
-// ── Utility ──────────────────────────────────────────────────────────
+// ── Debugging ─────────────────────────────────────────────────────────
+
+static DEBUG: bool = true;
+
+fn log_debug(msg: &str) {
+    if DEBUG {
+        web_sys::console::log_1(&JsValue::from_str(&format!("[BAEX-DEBUG] {}", msg)));
+    }
+}
 
 fn escape_html(s: &str) -> String {
     s.replace('&', "&amp;")
@@ -100,8 +144,6 @@ fn resolve_text_value(
     bindings: &js_sys::Array,
     depth: u32,
 ) {
-    use js_sys::{Array, Reflect};
-
     if depth > 10 {
         return;
     }
@@ -149,11 +191,31 @@ fn resolve_text_value(
         return;
     }
 
-    // ── Signal / reactive value: unwrap .value then recurse ──
+    // ── Signal / reactive value: wrap in marker and register binding ──
     if is_signal_like(value) {
-        if let Ok(val) = Reflect::get(value, &"value".into()) {
-            resolve_text_value(&val, output, bindings, depth + 1);
-        }
+        let marker = format!(
+            "t{}",
+            BINDING_ID.with(|id| {
+                let mut id = id.borrow_mut();
+                let cur = *id;
+                *id += 1;
+                cur
+            })
+        );
+
+        let val_str = js_to_string(value);
+        output.push_str(&format!(
+            "<span data-baex=\"{}\">{}</span>",
+            marker,
+            escape_html(&val_str)
+        ));
+
+        let binding = Object::new();
+        Reflect::set(&binding, &"marker".into(), &marker.into()).unwrap();
+        Reflect::set(&binding, &"type".into(), &"text".into()).unwrap();
+        Reflect::set(&binding, &"valueIdx".into(), &JsValue::from_f64(0.0)).unwrap();
+
+        bindings.push(&binding);
         return;
     }
 
@@ -202,9 +264,6 @@ pub fn get_component_property(cid: u32, name: String) -> JsValue {
 
 #[wasm_bindgen]
 pub fn get_component_changed_properties(cid: u32) -> JsValue {
-    use js_sys::Object;
-    use js_sys::Reflect;
-
     COMPONENT_STATE.with(|state| {
         let state = state.borrow();
         let result = Object::new();
@@ -291,7 +350,7 @@ pub fn on_signal_change(key: String, callback: js_sys::Function) {
 
 #[wasm_bindgen]
 pub fn process_template(strings: JsValue, values: JsValue) -> JsValue {
-    use js_sys::{Array, Object, Reflect};
+    log_debug("Phase 1: Starting process_template");
 
     let strings = Array::from(&strings);
     let values = Array::from(&values);
@@ -306,8 +365,9 @@ pub fn process_template(strings: JsValue, values: JsValue) -> JsValue {
         let s = strings.get(i).as_string().unwrap_or_default();
 
         if i < values_len {
-            // ── Check if this position is a binding (preceded by @ . ?) ──
+            log_debug(&format!("Phase 2: Processing segment {}/{}", i, strings_len));
             if let Some((bind_type, bind_name)) = detect_binding(&s) {
+                log_debug(&format!("Phase 3: Detected binding {} on {}", bind_type, bind_name));
                 let suffix = match bind_type {
                     "event" => format!("@{}=", bind_name),
                     "property" => format!(".{}=", bind_name),
@@ -315,10 +375,8 @@ pub fn process_template(strings: JsValue, values: JsValue) -> JsValue {
                     _ => unreachable!(),
                 };
 
-                // Append string part without the binding suffix
                 output.push_str(&s[..s.len() - suffix.len()]);
 
-                // Generate unique marker
                 let marker = format!(
                     "b{}",
                     BINDING_ID.with(|id| {
@@ -343,50 +401,58 @@ pub fn process_template(strings: JsValue, values: JsValue) -> JsValue {
 
                 match bind_type {
                     "event" => {
-                        Reflect::set(
-                            &binding,
-                            &"eventName".into(),
-                            &bind_name.into(),
-                        )
-                        .unwrap();
+                        Reflect::set(&binding, &"eventName".into(), &bind_name.into()).unwrap();
                     }
                     "property" => {
-                        Reflect::set(
-                            &binding,
-                            &"propName".into(),
-                            &bind_name.into(),
-                        )
-                        .unwrap();
+                        Reflect::set(&binding, &"propName".into(), &bind_name.into()).unwrap();
                     }
                     "bool" => {
-                        Reflect::set(
-                            &binding,
-                            &"attrName".into(),
-                            &bind_name.into(),
-                        )
-                        .unwrap();
+                        Reflect::set(&binding, &"attrName".into(), &bind_name.into()).unwrap();
                     }
                     _ => {}
                 }
 
                 result_bindings.push(&binding);
             } else {
-                // ── Text content: emit string, resolve value ──
                 output.push_str(&s);
                 let value = values.get(i);
                 resolve_text_value(&value, &mut output, &result_bindings, 0);
             }
         } else {
-            // ── Last string part (no corresponding value) ──
             output.push_str(&s);
         }
     }
 
+    log_debug("Phase 4: Finalizing TemplateResult and Blueprint");
+    
     let result = Object::new();
-    Reflect::set(&result, &"html".into(), &output.into()).unwrap();
+    Reflect::set(&result, &"html".into(), &output.clone().into()).unwrap();
     Reflect::set(&result, &"bindings".into(), &result_bindings).unwrap();
+    
+    // IR Layer 1: Blueprint
+    // [ANOMALY: Full tree parsing via html5ever is planned; currently returning a structural root]
+    let root_node = BlueprintNode {
+        node_type: BlueprintNodeType::Element,
+        tag: Some("root".into()),
+        text_content: None,
+        attributes: vec![],
+        children: vec![],
+    };
+    
+    let blueprint = Blueprint {
+        root: root_node,
+        version: "1.0".into(),
+        raw_html: output.clone(),
+    };
+    
+    if let Ok(bp_js) = serde_wasm_bindgen::to_value(&blueprint) {
+        Reflect::set(&result, &"blueprint".into(), &bp_js).unwrap();
+    }
+    
     result.into()
 }
+
+// ... (rest of the file)
 
 /// Reset binding counter (useful for tests / HMR)
 #[wasm_bindgen]
@@ -398,27 +464,31 @@ pub fn reset_binding_counter() {
 
 #[wasm_bindgen]
 pub fn resolve_observed_attributes(props: JsValue) -> js_sys::Array {
-    use js_sys::{Array, Object, Reflect};
+    log_debug("Starting resolve_observed_attributes");
+    log_debug(&format!("Props value: {:?}", props));
     let attrs = Array::new();
-    let entries = Object::entries(&Object::from(props));
-    for i in 0..entries.length() {
-        let entry = entries.get(i);
-        let key = Reflect::get(&entry, &0u32.into())
-            .ok()
-            .and_then(|v| v.as_string())
-            .unwrap_or_default();
-        let decl = Reflect::get(&entry, &1u32.into()).ok();
+    
+    let keys = Reflect::own_keys(&props).unwrap();
+    log_debug(&format!("Keys length: {}", keys.length()));
+    
+    for i in 0..keys.length() {
+        let key_val = keys.get(i);
+        let key = key_val.as_string().unwrap_or_default();
+        log_debug(&format!("Processing key: {}", key));
+        
+        let decl = Reflect::get(&props, &key_val).ok();
         let attr_val = decl.as_ref().and_then(|d| {
             Reflect::get(d, &"attribute".into()).ok()
         });
         let attr_name = match attr_val {
-            Some(v) if v.is_undefined() || v.is_null() => None,
+            Some(v) if v.is_undefined() || v.is_null() => Some(key.to_lowercase()),
             Some(v) if v.as_bool() == Some(true) => Some(key.to_lowercase()),
             Some(v) if v.as_bool() == Some(false) => continue,
             Some(v) => v.as_string(),
             None => Some(key.to_lowercase()),
         };
-        if let Some(name) = attr_name.or_else(|| Some(key.to_lowercase())) {
+        if let Some(name) = attr_name {
+            log_debug(&format!("Adding attribute: {}", name));
             attrs.push(&name.into());
         }
     }
@@ -483,7 +553,6 @@ pub fn deserialize_property(
 
 #[wasm_bindgen]
 pub fn register_globals() {
-    use js_sys::Reflect;
     let window = match window() {
         Some(w) => w,
         None => return,

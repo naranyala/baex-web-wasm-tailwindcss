@@ -1,4 +1,5 @@
-import type { Binding, TemplateResult } from './template';
+import { Binding, TemplateResult, BindingSet, NodeMap } from './template';
+import { BindingSchema } from './ir';
 
 export interface PropertyDeclaration {
   type?:
@@ -42,6 +43,14 @@ export interface PropertyPatch {
   value: unknown;
 }
 
+const DEBUG = true;
+
+function logDebug(msg: string) {
+  if (DEBUG) {
+    console.log(`[BAEX-DEBUG-ELEMENT] ${msg}`);
+  }
+}
+
 export class BaexElement extends HTMLElement {
   static properties: Record<string, PropertyDeclaration> = {};
   static state: Record<string, PropertyDeclaration> = {};
@@ -52,7 +61,8 @@ export class BaexElement extends HTMLElement {
   private _updateCallbacks: Array<() => void> = [];
   private _subscriptions: Array<() => void> = [];
   private _initialized = false;
-  private _nodeMap = new Map<string, Node>();
+  private _nodeMap: NodeMap = new Map();
+  private _bindingSet: BindingSet = new Map();
   private _isFirstRender = true;
 
   constructor() {
@@ -105,11 +115,13 @@ export class BaexElement extends HTMLElement {
 
   static get observedAttributes(): string[] {
     if (hasWasm('resolveObservedAttributes')) {
-      const props = (BaexElement as typeof BaexElement).properties;
+      const props = (this as typeof BaexElement).properties;
+      console.log('[BAEX-DEBUG-TS] observedAttributes props:', props);
       return (
         window as Record<string, (p: unknown) => string[]>
       ).resolveObservedAttributes(props);
     }
+
     const props = (BaexElement as typeof BaexElement).properties;
     return Object.entries(props)
       .map(([name, decl]) => resolveAttributeName(name, decl))
@@ -142,7 +154,13 @@ export class BaexElement extends HTMLElement {
   protected onDisconnected?(): void;
   protected onUpdate?(changed: PropertyValues): void;
 
+// ── IR Layer 3: Patch Set ────────────────────────────────────────────────
+// [RULE: PatchSet must only contain properties that actually changed]
+// [RULE: Patching must be batched via microtasks to prevent layout thrashing]
+// [ANOMALY: Patches are currently applied directly to DOM; should transition to Blueprint-based patching]
+
   private _performUpdate(): void {
+    logDebug('Phase 1: Performing update');
     this._pendingUpdate = false;
     const currentForce = this._forceUpdate;
     this._forceUpdate = false;
@@ -193,6 +211,7 @@ export class BaexElement extends HTMLElement {
   }
 
   private _renderInitial(): void {
+    logDebug('Phase 2: Initial rendering');
     const result = this.render();
     if (!result) return;
 
@@ -200,10 +219,22 @@ export class BaexElement extends HTMLElement {
       this.innerHTML = result;
     } else {
       this.innerHTML = result.html;
+      
+      // Populate BindingSet for O(1) lookup during patching
+      this._bindingSet.clear();
+      for (const b of result.bindings) {
+        this._bindingSet.set(b.marker, b);
+      }
+
       this._initializeNodeMap(result.bindings);
       this._applyBindings(result.bindings);
     }
   }
+
+// ── IR Layer 4: Node Map ─────────────────────────────────────────────────
+// [RULE: NodeMap must be reconstructed on every full re-render]
+// [RULE: NodeMap must provide O(1) access to dynamic DOM nodes]
+// [ANOMALY: NodeMap currently relies on data-baex attributes; should transition to internal references]
 
   private _initializeNodeMap(bindings: Binding[]): void {
     this._nodeMap.clear();
@@ -216,13 +247,12 @@ export class BaexElement extends HTMLElement {
   }
 
   private _applyPatches(patches: PropertyPatch[]): void {
+    logDebug(`Phase 3: Applying ${patches.length} patches`);
     if (patches.length === 0) return;
 
-    const result = this.render();
-    if (!result || typeof result === 'string') return;
-
     for (const patch of patches) {
-      const binding = result.bindings.find(
+      // Find binding that matches this property name
+      const binding = Array.from(this._bindingSet.values()).find(
         (b) =>
           (b.type === 'property' && b.propName === patch.propName) ||
           (b.type === 'bool' && b.attrName === patch.propName),
@@ -241,6 +271,8 @@ export class BaexElement extends HTMLElement {
         } else {
           node.removeAttribute(binding.attrName);
         }
+      } else if (binding.type === 'text') {
+        node.textContent = patch.value;
       }
     }
   }

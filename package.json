@@ -6,7 +6,7 @@
   "scripts": {
     "build": "rsbuild build",
     "check": "biome check --write",
-    "dev": "rsbuild --open",
+    "dev": "rsbuild",
     "format": "biome format --write",
     "preview": "rsbuild preview",
     "test": "vitest run",
@@ -23,6 +23,8 @@
     "vitest": "^4.1.8"
   },
   "dependencies": {
-    "shiki": "^4.2.0"
+    "immer": "^11.1.8",
+    "shiki": "^4.2.0",
+    "zod": "^4.4.3"
   }
 }
