@@ -20,27 +20,34 @@ This separation ensures that the most expensive operations (diffing and state ma
 
 #### Core Reactivity
 - **WASM-Backed State**: Component properties are synchronized in real-time with a Rust registry.
+- **Advanced Reactive Primitives**:
+  - **Signals**: Global and Component-Scoped reactive state.
+  - **Computed**: Auto-derived signals with lazy evaluation and caching.
+  - **Effects**: Automatic side-effect tracking and execution.
+  - **Watchers**: Explicit observation of signal changes with old/new value tracking.
 - **Dual-Slot State**:
   - properties: Reactive fields that can reflect to HTML attributes.
   - state: Reactive fields used for internal UI logic (no attribute reflection).
 - **Batched Updates**: Multiple state changes are coalesced into a single microtask re-render.
-- **Global Signals**: A Signal system for cross-component state sharing, bridged via WASM.
 - **Auto-Cleanup**: this.track() primitive for automatic signal unsubscription during component destruction.
 
 #### Template Engine (html tag)
 - **Reactive Bindings**:
   - @event: Direct event listener attachment.
-  - .property: Direct JS property updates (bypassing attributes).
+  - @event.modifier: Support for `.prevent`, `.stop`, `.stopImmediate`, `.self`, and `.once`.
+  - .property: Direct JS property updates.
+  - .ref=${fn}: Direct DOM element reference capturing.
   - ?bool: Boolean attribute toggling.
 - **Advanced Content**:
-  - Raw(): Safe injection of unescaped HTML (e.g., for Shiki highlighting).
+  - Raw(): Safe injection of unescaped HTML.
   - **Recursion**: Support for nested TemplateResult and dynamic array mappings.
-  - **Declarative Logic**: when() helper for conditional rendering without nested ternaries.
-- **Intermediate Representation (IR)**: Templates generate a Zod-validated Blueprint for structural metadata.
+  - **Declarative Logic**: when() helper for conditional rendering.
+- **Intermediate Representation (IR)**: Templates generate a Zod-validated Blueprint with a full HTML tree parsed via html5ever in WASM.
 
 #### Component Lifecycle
-- **Lifecycle Hooks**: onConnected, onDisconnected, and onUpdate for side-effect management.
+- **Enhanced Lifecycle Hooks**: onBeforeMount, onConnected, onUpdate, onAfterUpdate, onBeforeUnmount, and onDisconnected.
 - **Deferred Execution**: whenUpdate() callback for logic that must run after the DOM has been patched.
+- **Error Boundaries**: Specialized wrapper to catch rendering errors and provide fallback UI.
 - **Safe Registration**: defineComponent utility with duplicate registration guards.
 
 ### In Development (Upcoming)
@@ -83,25 +90,52 @@ Preview the production build locally:
 bun run preview
 ```
 
-## Framework Architecture V2 (The Rewrite)
+## Framework Architecture: The Layered Model
 
-The BAEX framework has been re-engineered from a basic wrapper to a professional reactive primitive to solve performance and stability issues.
+BAEX is organized into three primary layers that separate computation, orchestration, and representation.
 
-### The Problem (V1)
-V1 relied on innerHTML for rendering and querySelector for bindings. This caused:
-- **Destructive Updates**: Every state change destroyed and recreated the entire DOM subtree.
-- **Fragile Bindings**: Search for markers (data-baex) on every render.
-- **State Shadowing**: JS class fields shadowed prototype getters/setters, breaking reactivity.
+### 1. The Brain (Rust/WASM Core)
+The computational engine where the "truth" resides.
+- **State Registry**: A type-safe registry managing global signals and component-scoped properties.
+- **IR Generator**: The `process_template` engine that transforms `html` tagged templates into a structural **Blueprint** (Intermediate Representation) and a **BindingSet**.
+- **Diffing Engine**: Tracks mutations and generates a `PatchSet`—a minimal list of changed properties—to be sent to the frontend.
 
-### The Solution (V2)
-V2 introduces a Blueprint -> NodeMap -> Patch cycle.
+### 2. The Heart (TypeScript Orchestration)
+The glue that connects the WASM Brain to the Browser DOM.
+- **Lifecycle Manager (`BaexElement`)**: Orchestrates the component flow from `onBeforeMount` to `onDisconnected`.
+- **The NodeMap**: A high-performance mapping of binding markers to actual DOM references, enabling **O(1) access** to dynamic elements.
+- **Surgical Patching**: Instead of re-rendering the whole tree, the Heart applies the `PatchSet` directly to the `NodeMap`, updating only the affected attributes or text nodes.
 
-1. **Blueprint (TS)**: The html tag now creates a structured blueprint (cloned template) rather than just a string.
-2. **NodeMap (TS)**: Direct references to dynamic DOM nodes are stored during the first render, enabling O(1) updates.
-3. **State Store (Rust)**: The Source of Truth is moved to a type-safe Rust registry. Rust computes a PatchSet (the diff) of changed properties.
-4. **Targeted Patching**: The framework applies the PatchSet directly to the NodeMap, updating only the affected DOM elements without touching the rest of the tree.
+### 3. The Body (Web Components/DOM)
+The standards-compliant representation layer.
+- **Custom Elements**: Self-contained UI units that extend `BaexElement`.
+- **Reactive Bindings**: Uses markers (`data-baex`) during the first pass to identify "hot" zones in the DOM for future surgical updates.
+- **Native Performance**: Leverages the browser's own DOM engine for rendering, ensuring maximum compatibility and accessibility.
 
-This architecture ensures zero-loss of input focus, high-performance rendering, and rock-solid reactivity.
+## Deep Dive: The Reactive Cycle
+
+To achieve near-native performance, BAEX avoids the traditional "Virtual DOM" diffing on the JS main thread. Instead, it follows this cycle:
+
+1. **Compilation (WASM)**: When a template is defined, the Rust core parses it into a **Blueprint**. It identifies every dynamic part (bindings) and assigns them a unique marker.
+2. **Hydration**: On the first render, the `BaexElement` injects the HTML. It then performs a single tree traversal to find all markers and stores the actual `HTMLElement` references in a `NodeMap`.
+3. **Mutation Tracking**: When you update a property (e.g., `this.count++`), the setter notifies the Rust Brain. Rust marks this property as "dirty".
+4. **Surgical Patching**: In the next microtask, the Heart asks Rust for the `PatchSet`. It looks up the affected elements in the `NodeMap` and updates only the specific attribute or text content. **No re-rendering of the HTML string occurs.**
+
+## Known Limitations & Potential Flaws
+
+As an experimental framework, BAEX has several architectural trade-offs and flaws currently being addressed:
+
+### ⚠️ Structural Fragility
+Currently, the "Surgical Patching" only works for attribute/text updates. If a state change requires adding or removing DOM nodes (e.g., a `when()` block toggling), the framework falls back to `innerHTML` re-rendering. This destroys the existing DOM subtree and loses input focus.
+
+### ⚠️ The "First Pass" Overhead
+The initial render relies on `innerHTML` followed by a DOM crawl to build the `NodeMap`. For extremely large components, this can cause a noticeable "jank" during the first mount.
+
+### ⚠️ Boundary Crossing Cost
+Every property read/write crosses the JS $\leftrightarrow$ WASM boundary. While significantly faster than pure JS diffing for complex state, the sheer volume of calls for simple components can introduce overhead.
+
+### ⚠️ Marker Dependency
+The `NodeMap` is built by scanning for `data-baex` attributes. If external JS libraries modify the DOM and remove these attributes, the framework's patching mechanism will break.
 
 ## Learn more
 

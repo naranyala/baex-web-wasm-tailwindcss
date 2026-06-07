@@ -6,12 +6,15 @@ class StatusFooterElement extends BaexElement {
     const primitives = (window as any).baexPrimitives || [];
     const utils = Object.keys((window as any).utils || {});
     
+    const projectDir = 'baex-web-wasm-tailwindcss';
+
     return html`
       <footer 
-        class="fixed bottom-0 left-0 w-full h-6 bg-[#222] text-[#ddd] flex items-center px-2.5 text-[11px] z-[9999] border-t border-[#444] cursor-pointer hover:bg-[#333] transition-colors"
+        class="fixed bottom-0 left-0 w-full h-7 bg-[#0a0e17] text-gray-400 flex items-center justify-between px-3 text-[13px] z-[9999] border-t border-white/[0.06] cursor-pointer hover:bg-white/[0.02] transition-colors"
         @click=${() => (modalOpenSignal as any).value = true}
       >
-        <span><strong>BAEX API:</strong> ${primitives.length} Primitives | ${utils.length} Utility Functions</span>
+        <span class="font-mono text-white/30">${projectDir}</span>
+        <span class="font-mono"><span class="text-blue-400 font-semibold">BAEX</span> ${primitives.length} primitives · ${utils.length} utilities</span>
       </footer>
     `;
   }

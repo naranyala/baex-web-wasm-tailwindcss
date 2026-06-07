@@ -28,6 +28,9 @@ import apiManifest from './api-manifest.json';
 const rootEl = document.querySelector('#root');
 if (!rootEl) throw new Error('#root not found');
 
+const projectDir = 'baex-web-wasm-tailwindcss';
+document.title = projectDir;
+
 init().then(async () => {
   await initUtils();
   register_globals();

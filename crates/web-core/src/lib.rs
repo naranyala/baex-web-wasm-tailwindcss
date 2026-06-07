@@ -5,6 +5,11 @@ use std::collections::HashMap;
 use wasm_bindgen::prelude::*;
 use web_sys::window;
 
+use html5ever::tree_builder::TreeBuilderOpts;
+use html5ever::QualName;
+use markup5ever_rcdom::{Handle, NodeData};
+
+
 #[derive(Serialize, Deserialize)]
 #[serde(rename_all = "lowercase")]
 enum BlueprintNodeType {
@@ -18,6 +23,7 @@ struct BlueprintAttribute {
     name: String,
     value: String,
     is_dynamic: bool,
+    is_key: bool,
     marker: Option<String>,
 }
 
@@ -42,8 +48,9 @@ struct Blueprint {
 thread_local! {
     static SIGNAL_VALUES: RefCell<HashMap<String, JsValue>> = RefCell::new(HashMap::new());
     static SIGNAL_SUBSCRIBERS: RefCell<HashMap<String, Vec<js_sys::Function>>> = RefCell::new(HashMap::new());
+    static SCOPED_SIGNAL_VALUES: RefCell<HashMap<u32, HashMap<String, JsValue>>> = RefCell::new(HashMap::new());
+    static SCOPED_SIGNAL_SUBSCRIBERS: RefCell<HashMap<u32, HashMap<String, Vec<js_sys::Function>>>> = RefCell::new(HashMap::new());
     static BINDING_ID: RefCell<u32> = RefCell::new(0);
-
     static COMPONENT_ID_COUNTER: RefCell<u32> = RefCell::new(0);
     static COMPONENT_STATE: RefCell<HashMap<u32, ComponentState>> = RefCell::new(HashMap::new());
 }
@@ -81,24 +88,36 @@ fn escape_html(s: &str) -> String {
 }
 
 fn detect_binding(s: &str) -> Option<(&'static str, &str)> {
-    let bytes = s.as_bytes();
-    let len = bytes.len();
-    if len < 3 || bytes[len - 1] != b'=' {
+    if !s.ends_with('=') {
         return None;
     }
-    let before_eq = &s[..len - 1];
-    let prefix_pos = before_eq.rfind(|c: char| !c.is_alphanumeric() && c != '_')?;
-    let prefix = &s[prefix_pos..prefix_pos + 1];
-    let name = &s[prefix_pos + 1..len - 1];
-    if name.is_empty() || !name.chars().all(|c| c.is_alphanumeric() || c == '_') {
-        return None;
+    let before_eq = &s[..s.len() - 1];
+    
+    for (i, c) in before_eq.char_indices().rev() {
+        if c == '@' || c == '.' || c == '?' {
+            let name = &before_eq[i + 1..];
+            if name.is_empty() {
+                return None;
+            }
+            return match c {
+                '@' => Some(("event", name)),
+                '.' => Some(("property", name)),
+                '?' => Some(("bool", name)),
+                _ => unreachable!(),
+            };
+        } else if !c.is_alphanumeric() && c != '_' && c != '.' {
+            return None;
+        }
     }
-    match prefix {
-        "@" => Some(("event", name)),
-        "." => Some(("property", name)),
-        "?" => Some(("bool", name)),
-        _ => None,
+    None
+}
+
+fn parse_event_modifiers(name: &str) -> (&str, Vec<&str>) {
+    let parts: Vec<&str> = name.split('.').collect();
+    if parts.len() <= 1 {
+        return (name, vec![]);
     }
+    (parts[0], parts[1..].to_vec())
 }
 
 fn js_to_string(val: &JsValue) -> String {
@@ -291,59 +310,126 @@ pub fn remove_component(cid: u32) {
     COMPONENT_STATE.with(|state| {
         state.borrow_mut().remove(&cid);
     });
+    SCOPED_SIGNAL_VALUES.with(|store| {
+        store.borrow_mut().remove(&cid);
+    });
+    SCOPED_SIGNAL_SUBSCRIBERS.with(|store| {
+        store.borrow_mut().remove(&cid);
+    });
 }
 
 // ── Reactive Signal System ──────────────────────────────────────────
 
 #[wasm_bindgen]
-pub fn create_signal(key: String, initial: JsValue) -> JsValue {
-    SIGNAL_VALUES.with(|store| {
-        store
-            .borrow_mut()
-            .entry(key.clone())
-            .or_insert_with(|| initial.clone());
-    });
-    SIGNAL_SUBSCRIBERS.with(|store| {
-        store.borrow_mut().entry(key).or_default();
-    });
+pub fn create_signal(key: String, initial: JsValue, cid: Option<u32>) -> JsValue {
+    if let Some(cid) = cid {
+        SCOPED_SIGNAL_VALUES.with(|store| {
+            store.borrow_mut().entry(cid).or_default().entry(key.clone()).or_insert_with(|| initial.clone());
+        });
+        SCOPED_SIGNAL_SUBSCRIBERS.with(|store| {
+            store.borrow_mut().entry(cid).or_default().entry(key).or_default();
+        });
+    } else {
+        SIGNAL_VALUES.with(|store| {
+            store.borrow_mut().entry(key.clone()).or_insert_with(|| initial.clone());
+        });
+        SIGNAL_SUBSCRIBERS.with(|store| {
+            store.borrow_mut().entry(key).or_default();
+        });
+    }
     initial
 }
 
 #[wasm_bindgen]
-pub fn get_signal(key: String) -> JsValue {
-    SIGNAL_VALUES.with(|store| {
-        store
-            .borrow()
-            .get(&key)
-            .cloned()
-            .unwrap_or(JsValue::UNDEFINED)
-    })
+pub fn get_signal(key: String, cid: Option<u32>) -> JsValue {
+    if let Some(cid) = cid {
+        SCOPED_SIGNAL_VALUES.with(|store| {
+            store.borrow().get(&cid)
+                .and_then(|comp_store| comp_store.get(&key).cloned())
+                .unwrap_or(JsValue::UNDEFINED)
+        })
+    } else {
+        SIGNAL_VALUES.with(|store| {
+            store.borrow().get(&key).cloned().unwrap_or(JsValue::UNDEFINED)
+        })
+    }
 }
 
 #[wasm_bindgen]
-pub fn set_signal(key: String, value: JsValue) {
-    SIGNAL_VALUES.with(|store| {
-        store.borrow_mut().insert(key.clone(), value.clone());
-    });
-    SIGNAL_SUBSCRIBERS.with(|store| {
-        let subscribers = store.borrow();
-        if let Some(callbacks) = subscribers.get(&key) {
-            for callback in callbacks {
-                let _ = callback.call1(&JsValue::UNDEFINED, &value);
+pub fn set_signal(key: String, value: JsValue, cid: Option<u32>) {
+    if let Some(cid) = cid {
+        SCOPED_SIGNAL_VALUES.with(|store| {
+            store.borrow_mut().entry(cid).or_default().insert(key.clone(), value.clone());
+        });
+        SCOPED_SIGNAL_SUBSCRIBERS.with(|store| {
+            let store = store.borrow();
+            if let Some(comp_subs) = store.get(&cid) {
+                if let Some(callbacks) = comp_subs.get(&key) {
+                    for callback in callbacks {
+                        let _ = callback.call1(&JsValue::UNDEFINED, &value);
+                    }
+                }
+            }
+        });
+    } else {
+        SIGNAL_VALUES.with(|store| {
+            store.borrow_mut().insert(key.clone(), value.clone());
+        });
+        SIGNAL_SUBSCRIBERS.with(|store| {
+            let store = store.borrow();
+            if let Some(callbacks) = store.get(&key) {
+                for callback in callbacks {
+                    let _ = callback.call1(&JsValue::UNDEFINED, &value);
+                }
+            }
+        });
+    }
+}
+
+#[wasm_bindgen]
+pub fn on_signal_change(key: String, callback: js_sys::Function, cid: Option<u32>) {
+    if let Some(cid) = cid {
+        SCOPED_SIGNAL_SUBSCRIBERS.with(|store| {
+            store.borrow_mut().entry(cid).or_default().entry(key).or_default().push(callback);
+        });
+    } else {
+        SIGNAL_SUBSCRIBERS.with(|store| {
+            store.borrow_mut().entry(key).or_default().push(callback);
+        });
+    }
+}
+
+// ── Blueprint Tree Parsing (html5ever) ──────────────────────────────
+
+fn build_blueprint_tree(html: &str, _bindings_array: &Array) -> (Blueprint, Vec<(String, usize)>) {
+    let blueprint = Blueprint {
+        root: BlueprintNode {
+            node_type: BlueprintNodeType::Text,
+            tag: None,
+            text_content: Some(html.to_string()),
+            attributes: vec![],
+            children: vec![],
+        },
+        version: "0.0.0".to_string(),
+        raw_html: html.to_string(),
+    };
+    (blueprint, vec![])
+}
+
+fn bind_markers_to_node_paths(
+    bindings: &Array,
+    node_indices: &[(String, usize)],
+) {
+    for i in 0..bindings.length() {
+        let b = bindings.get(i);
+        if let Ok(marker) = Reflect::get(&b, &"marker".into()) {
+            if let Some(marker_str) = marker.as_string() {
+                if let Some((_, node_idx)) = node_indices.iter().find(|(m, _)| *m == marker_str) {
+                    let _ = Reflect::set(&b, &"nodeIdx".into(), &JsValue::from_f64(*node_idx as f64));
+                }
             }
         }
-    });
-}
-
-#[wasm_bindgen]
-pub fn on_signal_change(key: String, callback: js_sys::Function) {
-    SIGNAL_SUBSCRIBERS.with(|store| {
-        store
-            .borrow_mut()
-            .entry(key)
-            .or_default()
-            .push(callback);
-    });
+    }
 }
 
 // ── Template Processing (core framework logic) ──────────────────────
@@ -401,7 +487,15 @@ pub fn process_template(strings: JsValue, values: JsValue) -> JsValue {
 
                 match bind_type {
                     "event" => {
-                        Reflect::set(&binding, &"eventName".into(), &bind_name.into()).unwrap();
+                        let (event_name, modifiers) = parse_event_modifiers(bind_name);
+                        Reflect::set(&binding, &"eventName".into(), &event_name.into()).unwrap();
+                        if !modifiers.is_empty() {
+                            let mod_arr = Array::new();
+                            for m in &modifiers {
+                                mod_arr.push(&(*m).into());
+                            }
+                            Reflect::set(&binding, &"modifiers".into(), &mod_arr.into()).unwrap();
+                        }
                     }
                     "property" => {
                         Reflect::set(&binding, &"propName".into(), &bind_name.into()).unwrap();
@@ -429,25 +523,15 @@ pub fn process_template(strings: JsValue, values: JsValue) -> JsValue {
     Reflect::set(&result, &"html".into(), &output.clone().into()).unwrap();
     Reflect::set(&result, &"bindings".into(), &result_bindings).unwrap();
     
-    // IR Layer 1: Blueprint
-    // [ANOMALY: Full tree parsing via html5ever is planned; currently returning a structural root]
-    let root_node = BlueprintNode {
-        node_type: BlueprintNodeType::Element,
-        tag: Some("root".into()),
-        text_content: None,
-        attributes: vec![],
-        children: vec![],
-    };
-    
-    let blueprint = Blueprint {
-        root: root_node,
-        version: "1.0".into(),
-        raw_html: output.clone(),
-    };
+    // IR Layer 1: Blueprint (html5ever tree parsing)
+    let (blueprint, node_indices) = build_blueprint_tree(&output, &result_bindings);
     
     if let Ok(bp_js) = serde_wasm_bindgen::to_value(&blueprint) {
         Reflect::set(&result, &"blueprint".into(), &bp_js).unwrap();
     }
+    
+    // Map binding markers to their tree node indices
+    bind_markers_to_node_paths(&result_bindings, &node_indices);
     
     result.into()
 }
@@ -612,6 +696,13 @@ mod tests {
     }
 
     #[test]
+    fn test_detect_binding_event_modifiers() {
+        assert_eq!(detect_binding("@click.prevent="), Some(("event", "click.prevent")));
+        assert_eq!(detect_binding("@submit.prevent.stop="), Some(("event", "submit.prevent.stop")));
+        assert_eq!(detect_binding("@keydown.enter="), Some(("event", "keydown.enter")));
+    }
+
+    #[test]
     fn test_detect_binding_property() {
         assert_eq!(detect_binding(".value="), Some(("property", "value")));
         assert_eq!(detect_binding(".className="), Some(("property", "className")));
@@ -637,8 +728,24 @@ mod tests {
     #[test]
     fn test_detect_binding_multiple_suffixes() {
         // Only the last @ . ? before = counts
+        // Note: no longer stops at '.' so @click.prevent= works
         assert_eq!(detect_binding("class @click="), Some(("event", "click")));
         assert_eq!(detect_binding("nested.value .prop="), Some(("property", "prop")));
+    }
+
+    #[wasm_bindgen_test]
+    fn test_parse_event_modifiers() {
+        let (name, mods) = parse_event_modifiers("click");
+        assert_eq!(name, "click");
+        assert_eq!(mods.len(), 0);
+
+        let (name, mods) = parse_event_modifiers("click.prevent");
+        assert_eq!(name, "click");
+        assert_eq!(mods, vec!["prevent"]);
+
+        let (name, mods) = parse_event_modifiers("submit.prevent.stop");
+        assert_eq!(name, "submit");
+        assert_eq!(mods, vec!["prevent", "stop"]);
     }
 
     // ── WASM runtime tests ─────────────────────────────────────────

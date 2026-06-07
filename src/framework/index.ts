@@ -1,7 +1,7 @@
 export type { PropertyDeclaration, PropertyValues } from './baex-element';
 export { BaexElement, property, state } from './baex-element';
 export type { SignalSubscriber } from './signals';
-export { createSignal, getSignal, Signal } from './signals';
+export { createSignal, getSignal, Signal, effect, watch, Computed, useSignal, useComputed, useEffect } from './signals';
 export type { Binding, TemplateResult } from './template';
 export { css, html } from './template';
 

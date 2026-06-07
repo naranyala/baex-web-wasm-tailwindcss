@@ -59,7 +59,7 @@ export class BaexNav extends BaexElement {
         const isActive = idx === activeIdx;
         const textBtn = btn.querySelector('.nav-btn');
         if (textBtn) {
-          textBtn.classList.toggle('text-white', isActive);
+          textBtn.classList.toggle('text-white/90', isActive);
           textBtn.classList.toggle('text-white/40', !isActive);
         }
       });
@@ -98,18 +98,18 @@ export class BaexNav extends BaexElement {
     const homeWidth = 100 / (tabs.length + 1);
 
     return html`
-      <nav class="fixed top-0 left-0 right-0 z-50 flex justify-center p-4 bg-[#020917]/80 backdrop-blur-md">
+      <nav class="fixed top-0 left-0 right-0 z-50 flex justify-center p-4 bg-[#0a0e17]/90 backdrop-blur-md border-b border-white/[0.06]">
         <div 
           @click=${this._handleNav}
           class="relative flex items-stretch cursor-pointer rounded-md overflow-hidden"
         >
           <div 
-            class="nav-indicator absolute top-0 bottom-0 left-0 bg-white/10 transition-all duration-300 ease-out" 
+            class="nav-indicator absolute top-0 bottom-0 left-0 bg-white/[0.07] transition-all duration-300 ease-out rounded-md" 
             style="width: calc(${homeWidth}% - 8px);"
           ></div>
           
           <div data-view="home" class="nav-btn-wrapper relative">
-            <button class="nav-btn relative px-5 py-2 text-sm font-medium transition-colors duration-200 text-white">
+            <button class="nav-btn relative px-5 py-2 text-sm font-medium transition-colors duration-200 text-white/80">
               Home
             </button>
           </div>
@@ -118,12 +118,12 @@ export class BaexNav extends BaexElement {
               ? tabs.map((tab) =>
                   Raw(`
                 <div data-view="${tab.id}" class="nav-btn-wrapper relative flex items-center group">
-                  <button class="nav-btn relative px-5 py-2 text-sm font-medium transition-colors duration-200 text-white/40 hover:text-white">
+                  <button class="nav-btn relative px-5 py-2 text-sm font-medium transition-colors duration-200 text-white/40 hover:text-white/80">
                     ${tab.name}
                   </button>
                   <button 
                     data-close-tab="${tab.id}"
-                    class="mr-3 w-4 h-4 flex items-center justify-center text-white/30 hover:text-white hover:bg-white/10 transition-all text-[10px] leading-none"
+                    class="mr-3 w-4 h-4 flex items-center justify-center text-white/20 hover:text-white hover:bg-white/10 transition-all text-[10px] leading-none rounded"
                   >
                     ✕
                   </button>

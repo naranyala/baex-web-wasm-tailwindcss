@@ -18,7 +18,7 @@ class ShikiCodeblock extends BaexElement {
 
   render() {
     return html`
-      <div class="shiki-wrapper overflow-x-auto p-4 rounded-lg bg-[#0d1117] border border-white/10" .innerHTML="${this.highlighted}">
+      <div class="shiki-wrapper overflow-x-auto p-4 rounded-lg bg-[#0d1117] border border-white/10" .innerHTML=${this.highlighted}>
       </div>
     `;
   }

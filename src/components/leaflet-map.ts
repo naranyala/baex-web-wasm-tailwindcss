@@ -10,11 +10,11 @@ class LeafletMap extends BaexElement {
   private _map: L.Map | null = null;
 
   onConnected() {
-    this._initMap();
+    this.whenUpdate(() => this._initMap());
   }
 
   private _initMap() {
-    const mapEl = this.shadowRoot?.querySelector('#map') as HTMLElement;
+    const mapEl = this.querySelector('#map') as HTMLElement;
     if (!mapEl) return;
 
     const [lat, lng] = this.center.split(',').map(Number);

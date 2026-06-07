@@ -38,6 +38,9 @@ export const BindingSchema = z.object({
   eventName: z.string().optional(),
   propName: z.string().optional(),
   attrName: z.string().optional(),
+  modifiers: z.array(z.string()).optional(),
+  key: z.string().optional(),
+  nodeIdx: z.number().optional(),
 });
 
 export type Binding = z.infer<typeof BindingSchema>;

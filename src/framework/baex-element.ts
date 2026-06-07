@@ -1,5 +1,20 @@
 import { Binding, TemplateResult, BindingSet, NodeMap } from './template';
-import { BindingSchema } from './ir';
+
+type ModifierFn = (e: Event) => void;
+const MODIFIER_MAP: Record<string, (handler: EventListener) => EventListener> = {
+  prevent: (handler) => (e) => { e.preventDefault(); handler(e); },
+  stop: (handler) => (e) => { e.stopPropagation(); handler(e); },
+  stopImmediate: (handler) => (e) => { e.stopImmediatePropagation(); handler(e); },
+  self: (handler) => (e) => { if (e.target === e.currentTarget) handler(e); },
+  once: (handler) => {
+    let called = false;
+    return (e) => { if (!called) { called = true; handler(e); } };
+  },
+  passive: (handler) => handler, // handled via addEventListener options
+  capture: (handler) => handler, // handled via addEventListener options
+};
+
+type ModifierKey = keyof typeof MODIFIER_MAP;
 
 export interface PropertyDeclaration {
   type?:
@@ -51,7 +66,11 @@ function logDebug(msg: string) {
   }
 }
 
+// ── Rendering Context ──────────────────────────────────────────────────
+export let currentRenderingComponentId: number | null = null;
+
 export class BaexElement extends HTMLElement {
+
   static properties: Record<string, PropertyDeclaration> = {};
   static state: Record<string, PropertyDeclaration> = {};
 
@@ -62,6 +81,7 @@ export class BaexElement extends HTMLElement {
   private _subscriptions: Array<() => void> = [];
   private _initialized = false;
   private _nodeMap: NodeMap = new Map();
+  private _nodes: (HTMLElement | Text)[] = [];
   private _bindingSet: BindingSet = new Map();
   private _isFirstRender = true;
 
@@ -91,6 +111,7 @@ export class BaexElement extends HTMLElement {
   }
 
   disconnectedCallback(): void {
+    this.onBeforeUnmount?.();
     (window as any).remove_component(this._cid);
     this._subscriptions.forEach((unsub) => unsub());
     this._subscriptions = [];
@@ -153,6 +174,9 @@ export class BaexElement extends HTMLElement {
   protected onConnected?(): void;
   protected onDisconnected?(): void;
   protected onUpdate?(changed: PropertyValues): void;
+  protected onBeforeMount?(): void;
+  protected onAfterUpdate?(): void;
+  protected onBeforeUnmount?(): void;
 
 // ── IR Layer 3: Patch Set ────────────────────────────────────────────────
 // [RULE: PatchSet must only contain properties that actually changed]
@@ -178,10 +202,15 @@ export class BaexElement extends HTMLElement {
       : [];
 
     if (this._isFirstRender) {
+      currentRenderingComponentId = this._cid;
+      this.onBeforeMount?.();
       this._renderInitial();
+      currentRenderingComponentId = null;
       this._isFirstRender = false;
     } else if (patches.length > 0 || currentForce) {
+      currentRenderingComponentId = this._cid;
       const result = this.render();
+      currentRenderingComponentId = null;
       if (!result || typeof result === 'string') {
         this._renderInitial();
       } else {
@@ -195,6 +224,7 @@ export class BaexElement extends HTMLElement {
 
         if (allPatchesBound && !currentForce) {
           this._applyPatches(patches);
+          this.onAfterUpdate?.();
         } else {
           this._renderInitial();
         }
@@ -229,7 +259,10 @@ export class BaexElement extends HTMLElement {
       this._initializeNodeMap(result.bindings);
       this._applyBindings(result.bindings);
     }
+    this.onAfterUpdate?.();
   }
+
+  protected onBeforeMount?(): void;
 
 // ── IR Layer 4: Node Map ─────────────────────────────────────────────────
 // [RULE: NodeMap must be reconstructed on every full re-render]
@@ -238,8 +271,8 @@ export class BaexElement extends HTMLElement {
 
   private _initializeNodeMap(bindings: Binding[]): void {
     this._nodeMap.clear();
+    this._nodes = [];
     
-    // Use TreeWalker to efficiently find all nodes with data-baex attributes
     const walker = document.createTreeWalker(this, NodeFilter.SHOW_ELEMENT, {
       acceptNode: (node: Node) => {
         return (node as HTMLElement).hasAttribute('data-baex')
@@ -254,7 +287,10 @@ export class BaexElement extends HTMLElement {
       const marker = el.getAttribute('data-baex');
       if (marker) {
         this._nodeMap.set(marker, el);
-        // Clean up the DOM by removing the marker
+        const binding = this._bindingSet.get(marker);
+        if (binding && binding.nodeIdx !== undefined) {
+          this._nodes[binding.nodeIdx] = el;
+        }
         el.removeAttribute('data-baex');
       }
     }
@@ -265,7 +301,6 @@ export class BaexElement extends HTMLElement {
     if (patches.length === 0) return;
 
     for (const patch of patches) {
-      // Find binding that matches this property name
       const binding = Array.from(this._bindingSet.values()).find(
         (b) =>
           (b.type === 'property' && b.propName === patch.propName) ||
@@ -274,7 +309,10 @@ export class BaexElement extends HTMLElement {
 
       if (!binding) continue;
 
-      const node = this._nodeMap.get(binding.marker);
+      const node = binding.nodeIdx !== undefined 
+        ? this._nodes[binding.nodeIdx] 
+        : this._nodeMap.get(binding.marker);
+
       if (!node) continue;
 
       if (binding.type === 'property') {
@@ -297,9 +335,28 @@ export class BaexElement extends HTMLElement {
       if (!el) continue;
 
       if (b.type === 'event') {
-        el.addEventListener(b.eventName, b.value);
+        let handler = b.value as EventListener;
+        const mods = b.modifiers;
+        if (mods && mods.length > 0) {
+          let options: AddEventListenerOptions = {};
+          for (const m of mods) {
+            if (m === 'passive') options.passive = true;
+            else if (m === 'capture') options.capture = true;
+            else if (m === 'once') options.once = true;
+            else if (m in MODIFIER_MAP) {
+              handler = MODIFIER_MAP[m as ModifierKey](handler);
+            }
+          }
+          el.addEventListener(b.eventName, handler, options);
+        } else {
+          el.addEventListener(b.eventName, handler);
+        }
       } else if (b.type === 'property') {
-        (el as Record<string, unknown>)[b.propName] = b.value;
+        if (b.propName === 'ref' && typeof b.value === 'function') {
+          (b.value as (el: HTMLElement) => void)(el as HTMLElement);
+        } else {
+          (el as Record<string, unknown>)[b.propName] = b.value;
+        }
       } else if (b.type === 'bool') {
         if (b.value) {
           el.setAttribute(b.attrName, '');
