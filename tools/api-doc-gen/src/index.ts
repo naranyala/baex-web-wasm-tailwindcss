@@ -41,7 +41,7 @@ async function main() {
                 }
 
                 const content = readFileSync(fullPath, 'utf-8');
-                const { entries: fileEntries } = parseFile(content, relativePath);
+                const { entries: fileEntries } = parseFile(content, fullPath);
                 
                 if (fileEntries.length === 0) continue;
 

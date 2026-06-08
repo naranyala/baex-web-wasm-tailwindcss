@@ -16,12 +16,16 @@ function parseMarkdown(text: string): string {
 
 export function renderHtml(groupedEntries: Record<string, DocEntry[]>): string {
     const files = Object.keys(groupedEntries).sort();
+    const allEntries = Object.values(groupedEntries).flat();
+    
+    const documentedCount = allEntries.filter(e => e.description).length;
+    const undocumentedCount = allEntries.length - documentedCount;
     
     const content = files.map(filePath => `
         <div class="file-group">
             <h3 class="file-path">${filePath}</h3>
             ${groupedEntries[filePath].map(entry => `
-                <section class="entry" id="${entry.uniqueId}">
+                <section class="entry" id="${entry.uniqueId}" data-documented="${!!entry.description}">
                     <div class="entry-header">
                         <span class="type">${entry.type}</span>
                         <h2 class="name">${entry.name}</h2>
@@ -66,7 +70,13 @@ export function renderHtml(groupedEntries: Record<string, DocEntry[]>): string {
                     ` : ''}
                     
                     <div class="footer">
-                        <a href="file://${entry.filePath}" target="_blank">${entry.filePath}:${entry.lineNumber}</a>
+                        <div class="footer-content">
+                            <span class="footer-label">Source:</span>
+                            <a href="file://${entry.filePath}" target="_blank" class="footer-path">${entry.filePath}</a>
+                            <span class="footer-separator">|</span>
+                            <span class="footer-label">Line:</span>
+                            <span class="footer-line">${entry.lineNumber}</span>
+                        </div>
                     </div>
                 </section>
             `).join('')}
@@ -126,6 +136,22 @@ export function renderHtml(groupedEntries: Record<string, DocEntry[]>): string {
             max-width: 1200px;
         }
         
+        .filter-bar {
+            display: flex; gap: 1rem; margin-bottom: 2rem; align-items: center;
+            position: sticky; top: 1rem; z-index: 10;
+        }
+        .filter-btn {
+            background: var(--nav-bg); color: var(--text-muted); border: 1px solid var(--border);
+            padding: 0.5rem 1rem; border-radius: 8px; cursor: pointer; font-size: 0.9rem;
+            transition: all 0.2s; display: flex; align-items: center; gap: 0.5rem;
+        }
+        .filter-btn.active {
+            background: var(--primary); color: white; border-color: var(--primary);
+        }
+        .filter-btn .count {
+            background: rgba(0,0,0,0.3); padding: 0.1rem 0.5rem; border-radius: 4px; font-size: 0.8rem;
+        }
+        
         .file-group { margin-bottom: 4rem; }
         .file-path { 
             font-family: "JetBrains Mono", monospace; font-size: 1rem; 
@@ -182,8 +208,17 @@ export function renderHtml(groupedEntries: Record<string, DocEntry[]>): string {
             margin-top: 2rem; font-size: 0.8rem; color: var(--text-muted); 
             text-align: right; border-top: 1px solid var(--border); padding-top: 1rem;
         }
-        .footer a { color: var(--text-muted); text-decoration: none; }
-        .footer a:hover { color: var(--primary); }
+        .footer-content {
+            display: inline-flex; align-items: center; gap: 0.5rem;
+        }
+        .footer-label { font-weight: 600; color: #64748b; }
+        .footer-path { 
+            color: var(--text-muted); text-decoration: none; 
+            font-family: "JetBrains Mono", monospace; 
+        }
+        .footer-path:hover { color: var(--primary); }
+        .footer-separator { color: var(--border); }
+        .footer-line { font-family: "JetBrains Mono", monospace; color: var(--text); }
 
         @media (max-width: 1000px) {
             body { flex-direction: column; }
@@ -195,8 +230,12 @@ export function renderHtml(groupedEntries: Record<string, DocEntry[]>): string {
             main { 
                 margin-left: 0; padding: 1.5rem; width: 100%; 
             }
+            .filter-bar { flex-direction: column; align-items: stretch; }
+            .filter-btn { justify-content: center; }
             .entry { padding: 1.25rem; }
             .name { font-size: 1.5rem; }
+            .footer-content { flex-direction: column; align-items: flex-end; gap: 0.2rem; }
+            .footer-separator { display: none; }
         }
     </style>
 </head>
@@ -208,9 +247,38 @@ export function renderHtml(groupedEntries: Record<string, DocEntry[]>): string {
         </ul>
     </nav>
     <main>
+        <div class="filter-bar">
+            <button class="filter-btn active" onclick="filterDocs('all', this)">
+                All <span class="count">${allEntries.length}</span>
+            </button>
+            <button class="filter-btn" onclick="filterDocs('documented', this)">
+                Documented <span class="count">${documentedCount}</span>
+            </button>
+            <button class="filter-btn" onclick="filterDocs('undocumented', this)">
+                Undocumented <span class="count">${undocumentedCount}</span>
+            </button>
+        </div>
         ${content || '<p>No documentation found. Start adding <code>///</code> or <code>/** ... </code> comments to your code!</p>'}
     </main>
     <script>
+        function filterDocs(type, btn) {
+            document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+
+            const entries = document.querySelectorAll('.entry');
+            entries.forEach(el => {
+                const isDoc = el.getAttribute('data-documented') === 'true';
+                if (type === 'all') el.style.display = 'block';
+                else if (type === 'documented') el.style.display = isDoc ? 'block' : 'none';
+                else if (type === 'undocumented') el.style.display = isDoc ? 'none' : 'block';
+            });
+            
+            document.querySelectorAll('.file-group').forEach(group => {
+                const hasVisible = group.querySelectorAll('.entry[style*="display: block"], .entry:not([style])').length > 0;
+                group.style.display = hasVisible ? 'block' : 'none';
+            });
+        }
+
         document.addEventListener('DOMContentLoaded', (event) => {
             hljs.highlightAll();
         });

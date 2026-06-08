@@ -19,6 +19,7 @@ export interface ParseResult {
 export function parseFile(content: string, filePath: string): ParseResult {
     const entries: DocEntry[] = [];
     const lines = content.split('\n');
+    const nameCounts = new Map<string, number>();
     
     let i = 0;
     while (i < lines.length) {
@@ -53,7 +54,7 @@ export function parseFile(content: string, filePath: string): ParseResult {
 
             const { signature, endLine } = captureSignature(lines, i);
             if (signature) {
-                const entry = parseDocBlock(docBlock, signature, filePath, i + 1);
+                const entry = parseDocBlock(docBlock, signature, filePath, i + 1, nameCounts);
                 if (entry) entries.push(entry);
                 i = endLine;
             } else {
@@ -64,7 +65,7 @@ export function parseFile(content: string, filePath: string): ParseResult {
         else if (isPublicDefinition(line)) {
             const { signature, endLine } = captureSignature(lines, i);
             if (signature) {
-                const entry = parseDocBlock('', signature, filePath, i + 1);
+                const entry = parseDocBlock('', signature, filePath, i + 1, nameCounts);
                 if (entry) entries.push(entry);
                 i = endLine;
             } else {
@@ -79,15 +80,11 @@ export function parseFile(content: string, filePath: string): ParseResult {
 }
 
 function isPublicDefinition(line: string): boolean {
-    // Only capture top-level public API to avoid internal noise
     const patterns = [
         /^(?:pub\s*(?:\([a-z]*\))?\s*)?(?:fn|struct|enum|trait)\s+([a-zA-Z0-9_]+)/,
         /^export\s+(?:async\s+)?(?:function|class|const|let|var|type|enum|interface)\s+([a-zA-Z0-9_]+)/,
         /^export\s+default\s+([a-zA-Z0-9_]+)/,
     ];
-    
-    // To be a "public" definition without a doc block, it MUST be explicitly marked as pub or export
-    // otherwise we avoid listing every internal variable in the project.
     return patterns.some(p => p.test(line));
 }
 
@@ -96,14 +93,11 @@ function captureSignature(lines: string[], startIdx: number) {
     let foundEnd = false;
     let bracketStack: string[] = [];
     let i = startIdx;
-
-    // Limit search to avoid consuming the whole file on a broken signature
     const maxLines = 20;
     let linesRead = 0;
 
     while (i < lines.length && !foundEnd && linesRead < maxLines) {
         const sigLine = lines[i];
-        
         for (const char of sigLine) {
             if (char === '(' || char === '{' || char === '[') {
                 bracketStack.push(char);
@@ -121,17 +115,14 @@ function captureSignature(lines: string[], startIdx: number) {
                 if (bracketStack.length > 0 && bracketStack[bracketStack.length - 1] === '[') bracketStack.pop();
             }
         }
-        
         if (!foundEnd && sigLine.includes(';') && bracketStack.length === 0) {
             foundEnd = true;
         }
-        
         signature += sigLine + ' ';
         i++;
         linesRead++;
     }
 
-    // If we hit the limit without finding an end, it's likely not a simple definition
     if (!foundEnd && linesRead >= maxLines) {
         return { signature: null, endLine: startIdx };
     }
@@ -142,7 +133,7 @@ function captureSignature(lines: string[], startIdx: number) {
     };
 }
 
-function parseDocBlock(docBlock: string, signature: string, filePath: string, lineNumber: number): DocEntry | null {
+function parseDocBlock(docBlock: string, signature: string, filePath: string, lineNumber: number, nameCounts: Map<string, number>): DocEntry | null {
     const lines = docBlock.split('\n').map(l => l.trim());
     const description: string[] = [];
     const paramsMap = new Map<string, { description: string, type?: string }>();
@@ -179,14 +170,18 @@ function parseDocBlock(docBlock: string, signature: string, filePath: string, li
     const nameMatch = strippedSignature.match(/(?:pub\s*\([a-z]*\)\s*)?(?:fn|function|class|struct|const|let|var|pub\s+fn|pub\s+struct)\s+([a-zA-Z0-9_]+)/);
     const name = (nameMatch ? nameMatch[1] : strippedSignature.split(/[ (]/)[0]) || 'unknown';
 
+    const count = (nameCounts.get(name) || 0) + 1;
+    nameCounts.set(name, count);
+    const suffix = count > 1 ? `_${count}` : '';
+
     let type: DocEntry['type'] = 'variable';
     if (signature.includes('fn ') || signature.includes('function ')) type = 'function';
     else if (signature.includes('class ')) type = 'class';
-    else if (signature.includes('struct ')) type = 'struct';
+    else if (signature, signature.includes('struct ')) type = 'struct';
 
     const entry: DocEntry = {
         name,
-        uniqueId: `${name}-${filePath.replace(/[\/\\.]/g, '_')}`,
+        uniqueId: `${name}${suffix}-${filePath.replace(/[\/\\.]/g, '_')}`,
         type,
         description: description.join('\n').trim(),
         params: [],
