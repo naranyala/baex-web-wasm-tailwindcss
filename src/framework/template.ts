@@ -8,14 +8,34 @@ function logDebug(msg: string) {
   }
 }
 
+/**
+ * The result of processing an `html` tagged template.
+ */
 export interface TemplateResult {
+  /** The final HTML string with markers. */
   html: string;
+  /** A list of bindings used in the template. */
   bindings: Binding[];
+  /** The pre-parsed blueprint tree used for optimized patching. */
   blueprint: Blueprint;
 }
 
+/**
+ * Marks a string as raw HTML to prevent it from being escaped during processing.
+ * 
+ * @param value The HTML string to treat as raw.
+ * @returns A raw HTML wrapper.
+ */
 export const Raw = (value: string) => ({ __raw: true, value });
 
+/**
+ * Conditional rendering helper.
+ * 
+ * @param condition A value or function that returns a boolean.
+ * @param thenResult The template to render if condition is truthy.
+ * @param elseResult The template to render if condition is falsy.
+ * @returns The selected template result.
+ */
 export function when<T>(
   condition: T | (() => T),
   thenResult: TemplateResult | string,
@@ -46,6 +66,16 @@ function isSignalLike(v: unknown): v is { value: unknown } {
   return typeof v === 'object' && v !== null && 'value' in v;
 }
 
+/**
+ * Tagged template function for creating reactive HTML.
+ * 
+ * It processes bindings like `@click`, `.value`, and `?hidden` using the WASM core 
+ * to produce a `TemplateResult` containing the final HTML and the blueprint.
+ * 
+ * @param strings The static parts of the template.
+ * @param values The dynamic values inserted into the template.
+ * @returns A `TemplateResult` used for rendering and patching.
+ */
 export function html(
   strings: TemplateStringsArray,
   ...values: unknown[]
@@ -113,6 +143,13 @@ export function html(
   };
 }
 
+/**
+ * Tagged template function for generating CSS strings.
+ * 
+ * @param strings The static parts of the CSS.
+ * @param values The dynamic values inserted into the CSS.
+ * @returns A combined CSS string.
+ */
 export function css(
   strings: TemplateStringsArray,
   ...values: unknown[]

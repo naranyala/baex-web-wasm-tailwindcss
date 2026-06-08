@@ -16,15 +16,27 @@ const MODIFIER_MAP: Record<string, (handler: EventListener) => EventListener> = 
 
 type ModifierKey = keyof typeof MODIFIER_MAP;
 
+/**
+ * Configuration for a reactive property.
+ */
 export interface PropertyDeclaration {
+  /** The expected JS type of the property. Used for deserialization from attributes. */
   type?:
     | StringConstructor
     | NumberConstructor
     | BooleanConstructor
     | ObjectConstructor
     | ArrayConstructor;
+  /** 
+   * The attribute name that maps to this property. 
+   * - `true` or `undefined`: maps to lowercase prop name.
+   * - `false`: property is not reflected to attribute.
+   * - `string`: custom attribute name.
+   */
   attribute?: string | boolean;
+  /** Whether changes to the property should be reflected back to the DOM attribute. */
   reflect?: boolean;
+  /** Custom comparison function to determine if a value has changed. */
   hasChanged?(value: unknown, oldValue: unknown): boolean;
 }
 
@@ -67,8 +79,23 @@ function logDebug(msg: string) {
 }
 
 // ── Rendering Context ──────────────────────────────────────────────────
+/** 
+ * Tracks the ID of the component currently being rendered. 
+ * Used by `useSignal` and other hooks to scope reactivity.
+ */
 export let currentRenderingComponentId: number | null = null;
 
+/**
+ * Base class for all reactive components in the Baex framework.
+ * 
+ * Components define their reactive state using `@property` and `@state` decorators.
+ * When a property changes, the component automatically schedules a re-render.
+ * 
+ * The rendering process is split into:
+ * 1. `render()`: returns the template.
+ * 2. `Blueprint`: parses the template into a tree of nodes.
+ * 3. `Patching`: updates only the parts of the DOM that changed.
+ */
 export class BaexElement extends HTMLElement {
 
   static properties: Record<string, PropertyDeclaration> = {};
@@ -137,7 +164,6 @@ export class BaexElement extends HTMLElement {
   static get observedAttributes(): string[] {
     if (hasWasm('resolveObservedAttributes')) {
       const props = (this as typeof BaexElement).properties;
-      console.log('[BAEX-DEBUG-TS] observedAttributes props:', props);
       return (
         window as Record<string, (p: unknown) => string[]>
       ).resolveObservedAttributes(props);
@@ -149,6 +175,12 @@ export class BaexElement extends HTMLElement {
       .filter((attr): attr is string => attr !== null);
   }
 
+  /**
+   * Schedules a re-render of the component.
+   * Updates are batched using `queueMicrotask` to avoid multiple renders in a single sync block.
+   * 
+   * @param force If true, forces a full re-render regardless of property changes.
+   */
   requestUpdate(force = false): void {
     if (force) {
       this._forceUpdate = true;
@@ -159,6 +191,13 @@ export class BaexElement extends HTMLElement {
     }
   }
 
+  /**
+   * Subscribes the component to a signal. 
+   * The component will re-render whenever the signal value changes.
+   * 
+   * @param signal The signal to track.
+   * @param callback The callback to execute on change (usually just calls `requestUpdate`).
+   */
   track<T>(
     signal: { subscribe: (cb: (val: T) => void) => () => void },
     callback: (val: T) => void,
@@ -167,21 +206,28 @@ export class BaexElement extends HTMLElement {
     this._subscriptions.push(unsub);
   }
 
+  /**
+   * Defines the component's template. Must be implemented by all subclasses.
+   * 
+ *. @returns A template string or a `TemplateResult` (for optimized patching).
+   * @throws Error if not implemented.
+   */
   protected render(): string | TemplateResult {
     throw new Error('render() must be implemented by subclass');
   }
 
+  /** Lifecycle hook: Called when the component is added to the DOM. */
   protected onConnected?(): void;
+  /** Lifecycle hook: Called when the component is removed from the DOM. */
   protected onDisconnected?(): void;
+  /** Lifecycle hook: Called after an update, providing the set of changed properties. */
   protected onUpdate?(changed: PropertyValues): void;
+  /** Lifecycle hook: Called immediately before the first render. */
   protected onBeforeMount?(): void;
+  /** Lifecycle hook: Called after every successful update (initial or patch). */
   protected onAfterUpdate?(): void;
+  /** Lifecycle hook: Called immediately before the component is destroyed. */
   protected onBeforeUnmount?(): void;
-
-// ── IR Layer 3: Patch Set ────────────────────────────────────────────────
-// [RULE: PatchSet must only contain properties that actually changed]
-// [RULE: Patching must be batched via microtasks to prevent layout thrashing]
-// [ANOMALY: Patches are currently applied directly to DOM; should transition to Blueprint-based patching]
 
   private _performUpdate(): void {
     logDebug('Phase 1: Performing update');
@@ -250,7 +296,6 @@ export class BaexElement extends HTMLElement {
     } else {
       this.innerHTML = result.html;
       
-      // Populate BindingSet for O(1) lookup during patching
       this._bindingSet.clear();
       for (const b of result.bindings) {
         this._bindingSet.set(b.marker, b);
@@ -261,13 +306,6 @@ export class BaexElement extends HTMLElement {
     }
     this.onAfterUpdate?.();
   }
-
-  protected onBeforeMount?(): void;
-
-// ── IR Layer 4: Node Map ─────────────────────────────────────────────────
-// [RULE: NodeMap must be reconstructed on every full re-render]
-// [RULE: NodeMap must provide O(1) access to dynamic DOM nodes]
-// [ANOMALY: NodeMap currently relies on data-baex attributes; should transition to internal references]
 
   private _initializeNodeMap(bindings: Binding[]): void {
     this._nodeMap.clear();
@@ -410,11 +448,6 @@ export class BaexElement extends HTMLElement {
     }
   }
 
-  // Remove this method as it's now handled by setters
-  // private _initializeInstanceProperties(): void {
-  //   ...
-  // }
-
   private _setPropertyFromAttribute(
     propName: string,
     decl: PropertyDeclaration,
@@ -464,8 +497,11 @@ export class BaexElement extends HTMLElement {
     return String(value);
   }
 
-  // Removed as state is now managed by Rust
-
+  /**
+   * Schedules a callback to be executed after the next update cycle.
+   * 
+   * @param cb The callback to execute.
+   */
   whenUpdate(cb: () => void): void {
     if (!this._pendingUpdate) {
       cb();
@@ -475,6 +511,10 @@ export class BaexElement extends HTMLElement {
   }
 }
 
+/**
+ * Decorator used to define a reactive property on a BaexElement.
+ * Properties can be mapped to DOM attributes for two-way binding.
+ */
 export function property(decl?: PropertyDeclaration): PropertyDecorator {
   return (target: object, key: string | symbol) => {
     if (!target) return;
@@ -488,6 +528,10 @@ export function property(decl?: PropertyDeclaration): PropertyDecorator {
   };
 }
 
+/**
+ * Decorator used to define a reactive internal state property on a BaexElement.
+ * State properties do not reflect to DOM attributes by default.
+ */
 export function state(decl?: PropertyDeclaration): PropertyDecorator {
   return (target: object, key: string | symbol) => {
     if (!target) return;

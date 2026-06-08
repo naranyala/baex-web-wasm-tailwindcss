@@ -1,0 +1,3697 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API Documentation</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/tokyo-night-dark.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <style>
+        * { box-sizing: border-box; }
+        :root {
+            --primary: #60a5fa;
+            --bg: #0f172a;
+            --nav-bg: #1e293b;
+            --text: #f1f5f9;
+            --text-muted: #94a3b8;
+            --border: #334155;
+            --entry-bg: #1e293b;
+            --warn-bg: #451a03;
+            --warn-border: #b45309;
+            --warn-text: #fbbf24;
+            --code-inline-bg: #334155;
+        }
+        body { 
+            font-family: "Inter", -apple-system, system-ui, sans-serif; 
+            line-height: 1.6; color: var(--text); margin: 0; 
+            background: var(--bg); display: flex; min-height: 100vh;
+        }
+        
+        nav { 
+            position: fixed; width: 300px; height: 100vh; overflow-y: auto; 
+            background: var(--nav-bg); border-right: 1px solid var(--border); padding: 2rem 1rem; 
+            z-index: 100;
+        }
+        nav h1 { font-size: 1.25rem; margin-bottom: 1.5rem; padding: 0 1rem; color: var(--primary); }
+        nav ul { list-style: none; padding: 0; margin: 0; }
+        nav li { margin: 0.1rem 0; }
+        nav a { 
+            display: block; padding: 0.4rem 1rem; text-decoration: none; 
+            color: var(--text-muted); font-size: 0.85rem; border-radius: 6px; transition: all 0.2s;
+        }
+        nav a:hover { background: #334155; color: var(--primary); }
+
+        main { 
+            margin-left: 300px; padding: 2rem 4rem; width: calc(100% - 300px); 
+            max-width: 1200px;
+        }
+        
+        .file-group { margin-bottom: 4rem; }
+        .file-path { 
+            font-family: "JetBrains Mono", monospace; font-size: 1rem; 
+            color: var(--primary); border-bottom: 1px solid var(--border); 
+            padding-bottom: 0.5rem; margin-bottom: 2rem;
+        }
+        
+        .entry { 
+            background: var(--entry-bg); padding: 2rem; margin-bottom: 3rem; 
+            border-radius: 12px; border: 1px solid var(--border); 
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            width: 100%;
+        }
+        .entry-header { display: flex; align-items: center; gap: 1rem; margin-bottom: 1.5rem; flex-wrap: wrap; }
+        .type { 
+            background: #334155; color: #cbd5e1; padding: 0.2rem 0.6rem; 
+            border-radius: 4px; font-size: 0.75rem; font-family: "JetBrains Mono", monospace; 
+            text-transform: uppercase; font-weight: 600;
+        }
+        .name { margin: 0; font-size: 1.8rem; font-weight: 700; color: #fff; }
+        
+        .warnings { 
+            background: var(--warn-bg); border: 1px solid var(--warn-border); 
+            color: var(--warn-text); padding: 1rem; border-radius: 8px; 
+            margin-bottom: 1.5rem; font-size: 0.9rem;
+        }
+        .warnings ul { margin: 0.5rem 0 0 1.2rem; padding: 0; }
+
+        .description { font-size: 1.1rem; color: #cbd5e1; margin-bottom: 1.5rem; }
+        .description code { 
+            background: var(--code-inline-bg); color: #fff; padding: 0.2rem 0.4rem; 
+            border-radius: 4px; font-family: "JetBrains Mono", monospace; font-size: 0.9em; 
+        }
+        
+        .params, .returns, .examples { 
+            margin-top: 1.5rem; padding: 1.25rem; background: #0f172a; 
+            border-radius: 8px; border: 1px solid var(--border);
+        }
+        .params h3, .returns h3, .examples h3 { 
+            margin-top: 0; font-size: 0.9rem; text-transform: uppercase; 
+            color: var(--text-muted); letter-spacing: 0.05em; margin-bottom: 1rem;
+        }
+        .params ul { margin: 0; padding-left: 1.2rem; }
+        .params li { margin-bottom: 0.5rem; }
+        .undocumented { color: #64748b; font-style: italic; }
+        
+        .code-wrapper { margin: 1rem 0; border-radius: 8px; overflow: hidden; }
+        pre { 
+            margin: 0; padding: 1.25rem; overflow-x: auto; 
+            font-size: 0.9rem; font-family: "JetBrains Mono", monospace; 
+        }
+        
+        .footer { 
+            margin-top: 2rem; font-size: 0.8rem; color: var(--text-muted); 
+            text-align: right; border-top: 1px solid var(--border); padding-top: 1rem;
+        }
+        .footer a { color: var(--text-muted); text-decoration: none; }
+        .footer a:hover { color: var(--primary); }
+
+        @media (max-width: 1000px) {
+            body { flex-direction: column; }
+            nav { 
+                position: relative; width: 100%; height: auto; 
+                border-right: none; border-bottom: 1px solid var(--border); 
+                padding: 1.5rem;
+            }
+            main { 
+                margin-left: 0; padding: 1.5rem; width: 100%; 
+            }
+            .entry { padding: 1.25rem; }
+            .name { font-size: 1.5rem; }
+        }
+    </style>
+</head>
+<body>
+    <nav>
+        <h1>API Reference</h1>
+        <ul>
+            <li><a href="#AppElement-src_app_app_ts">AppElement</a></li><li><a href="#currentRenderingComponentId-src_framework_baex-element_ts">currentRenderingComponentId</a></li><li><a href="#export-src_framework_baex-element_ts">export</a></li><li><a href="#export-src_framework_baex-element_ts">export</a></li><li><a href="#property-src_framework_baex-element_ts">property</a></li><li><a href="#protected-src_framework_baex-element_ts">protected</a></li><li><a href="#protected-src_framework_baex-element_ts">protected</a></li><li><a href="#protected-src_framework_baex-element_ts">protected</a></li><li><a href="#protected-src_framework_baex-element_ts">protected</a></li><li><a href="#protected-src_framework_baex-element_ts">protected</a></li><li><a href="#protected-src_framework_baex-element_ts">protected</a></li><li><a href="#protected-src_framework_baex-element_ts">protected</a></li><li><a href="#requestUpdate-src_framework_baex-element_ts">requestUpdate</a></li><li><a href="#state-src_framework_baex-element_ts">state</a></li><li><a href="#to-src_framework_baex-element_ts">to</a></li><li><a href="#unsub-src_framework_baex-element_ts">unsub</a></li><li><a href="#whenUpdate-src_framework_baex-element_ts">whenUpdate</a></li><li><a href="#getHighlighter-src_framework_highlighter_ts">getHighlighter</a></li><li><a href="#highlightCode-src_framework_highlighter_ts">highlightCode</a></li><li><a href="#defineComponent-src_framework_index_ts">defineComponent</a></li><li><a href="#BindingSchema-src_framework_ir_ts">BindingSchema</a></li><li><a href="#BlueprintNodeSchema-src_framework_ir_ts">BlueprintNodeSchema</a></li><li><a href="#BlueprintSchema-src_framework_ir_ts">BlueprintSchema</a></li><li><a href="#export-src_framework_ir_ts">export</a></li><li><a href="#export-src_framework_ir_ts">export</a></li><li><a href="#export-src_framework_ir_ts">export</a></li><li><a href="#export-src_framework_ir_ts">export</a></li><li><a href="#export-src_framework_ir_ts">export</a></li><li><a href="#export-src_framework_ir_ts">export</a></li><li><a href="#export-src_framework_ir_ts">export</a></li><li><a href="#export-src_framework_ir_ts">export</a></li><li><a href="#createSignal-src_framework_signals_ts">createSignal</a></li><li><a href="#destroy-src_framework_signals_ts">destroy</a></li><li><a href="#get-src_framework_signals_ts">get</a></li><li><a href="#get-src_framework_signals_ts">get</a></li><li><a href="#get-src_framework_signals_ts">get</a></li><li><a href="#getSignal-src_framework_signals_ts">getSignal</a></li><li><a href="#peek-src_framework_signals_ts">peek</a></li><li><a href="#peek-src_framework_signals_ts">peek</a></li><li><a href="#set-src_framework_signals_ts">set</a></li><li><a href="#setScheduler-src_framework_signals_ts">setScheduler</a></li><li><a href="#subscribe-src_framework_signals_ts">subscribe</a></li><li><a href="#subscribed-src_framework_signals_ts">subscribed</a></li><li><a href="#useComputed-src_framework_signals_ts">useComputed</a></li><li><a href="#useEffect-src_framework_signals_ts">useEffect</a></li><li><a href="#useSignal-src_framework_signals_ts">useSignal</a></li><li><a href="#watch-src_framework_signals_ts">watch</a></li><li><a href="#css-src_framework_template_ts">css</a></li><li><a href="#export-src_framework_template_ts">export</a></li><li><a href="#Raw-src_framework_template_ts">Raw</a></li><li><a href="#when-src_framework_template_ts">when</a></li><li><a href="#clearTabsState-src_utils_tabs-storage_ts">clearTabsState</a></li><li><a href="#export-src_utils_tabs-storage_ts">export</a></li><li><a href="#loadTabsState-src_utils_tabs-storage_ts">loadTabsState</a></li><li><a href="#saveTabsState-src_utils_tabs-storage_ts">saveTabsState</a></li><li><a href="#modalOpenSignal-src_widgets_status-modal_ts">modalOpenSignal</a></li><li><a href="#export-src_widgets_tree-item_ts">export</a></li><li><a href="#bind_markers_to_node_paths-crates_web-core_src_blueprint_rs">bind_markers_to_node_paths</a></li><li><a href="#Blueprint-crates_web-core_src_blueprint_rs">Blueprint</a></li><li><a href="#BlueprintAttribute-crates_web-core_src_blueprint_rs">BlueprintAttribute</a></li><li><a href="#BlueprintNode-crates_web-core_src_blueprint_rs">BlueprintNode</a></li><li><a href="#build_blueprint_tree-crates_web-core_src_blueprint_rs">build_blueprint_tree</a></li><li><a href="#pub-crates_web-core_src_blueprint_rs">pub</a></li><li><a href="#clear_component_changed_properties-crates_web-core_src_component_rs">clear_component_changed_properties</a></li><li><a href="#ComponentState-crates_web-core_src_component_rs">ComponentState</a></li><li><a href="#get_component_changed_properties-crates_web-core_src_component_rs">get_component_changed_properties</a></li><li><a href="#get_component_property-crates_web-core_src_component_rs">get_component_property</a></li><li><a href="#new-crates_web-core_src_component_rs">new</a></li><li><a href="#register_component-crates_web-core_src_component_rs">register_component</a></li><li><a href="#remove_component-crates_web-core_src_component_rs">remove_component</a></li><li><a href="#update_component_property-crates_web-core_src_component_rs">update_component_property</a></li><li><a href="#register_globals-crates_web-core_src_lib_rs">register_globals</a></li><li><a href="#test_component_state_isolation-crates_web-core_src_lib_rs">test_component_state_isolation</a></li><li><a href="#test_detect_binding_bool-crates_web-core_src_lib_rs">test_detect_binding_bool</a></li><li><a href="#test_detect_binding_edge_cases-crates_web-core_src_lib_rs">test_detect_binding_edge_cases</a></li><li><a href="#test_detect_binding_event-crates_web-core_src_lib_rs">test_detect_binding_event</a></li><li><a href="#test_detect_binding_event_modifiers-crates_web-core_src_lib_rs">test_detect_binding_event_modifiers</a></li><li><a href="#test_detect_binding_multiple_suffixes-crates_web-core_src_lib_rs">test_detect_binding_multiple_suffixes</a></li><li><a href="#test_detect_binding_property-crates_web-core_src_lib_rs">test_detect_binding_property</a></li><li><a href="#test_escape_html_all-crates_web-core_src_lib_rs">test_escape_html_all</a></li><li><a href="#test_escape_html_ampersand-crates_web-core_src_lib_rs">test_escape_html_ampersand</a></li><li><a href="#test_escape_html_angle_brackets-crates_web-core_src_lib_rs">test_escape_html_angle_brackets</a></li><li><a href="#test_escape_html_noop-crates_web-core_src_lib_rs">test_escape_html_noop</a></li><li><a href="#test_escape_html_quotes-crates_web-core_src_lib_rs">test_escape_html_quotes</a></li><li><a href="#test_is_signal_like-crates_web-core_src_lib_rs">test_is_signal_like</a></li><li><a href="#test_is_template_result-crates_web-core_src_lib_rs">test_is_template_result</a></li><li><a href="#test_js_to_string_various-crates_web-core_src_lib_rs">test_js_to_string_various</a></li><li><a href="#test_parse_event_modifiers-crates_web-core_src_lib_rs">test_parse_event_modifiers</a></li><li><a href="#test_process_template_html_escaping-crates_web-core_src_lib_rs">test_process_template_html_escaping</a></li><li><a href="#test_process_template_signal_wrapping-crates_web-core_src_lib_rs">test_process_template_signal_wrapping</a></li><li><a href="#test_process_template_simple_text-crates_web-core_src_lib_rs">test_process_template_simple_text</a></li><li><a href="#test_serialize_deserialize_boolean-crates_web-core_src_lib_rs">test_serialize_deserialize_boolean</a></li><li><a href="#test_serialize_deserialize_number-crates_web-core_src_lib_rs">test_serialize_deserialize_number</a></li><li><a href="#test_serialize_deserialize_number_edge_cases-crates_web-core_src_lib_rs">test_serialize_deserialize_number_edge_cases</a></li><li><a href="#test_serialize_deserialize_object-crates_web-core_src_lib_rs">test_serialize_deserialize_object</a></li><li><a href="#test_serialize_deserialize_string-crates_web-core_src_lib_rs">test_serialize_deserialize_string</a></li><li><a href="#test_signal_create_get_set-crates_web-core_src_lib_rs">test_signal_create_get_set</a></li><li><a href="#create_signal-crates_web-core_src_signal_rs">create_signal</a></li><li><a href="#get_signal-crates_web-core_src_signal_rs">get_signal</a></li><li><a href="#on_signal_change-crates_web-core_src_signal_rs">on_signal_change</a></li><li><a href="#reset_binding_counter-crates_web-core_src_template_rs">reset_binding_counter</a></li><li><a href="#escape_html-crates_web-core_src_util_rs">escape_html</a></li><li><a href="#is_signal_like-crates_web-core_src_util_rs">is_signal_like</a></li><li><a href="#is_template_result-crates_web-core_src_util_rs">is_template_result</a></li><li><a href="#js_to_string-crates_web-core_src_util_rs">js_to_string</a></li><li><a href="#log_debug-crates_web-core_src_util_rs">log_debug</a></li><li><a href="#parse_event_modifiers-crates_web-core_src_util_rs">parse_event_modifiers</a></li><li><a href="#macro_rules!-crates_web-core_target_debug_build_markup5ever-b14cb8222b378539_out_generated_rs">macro_rules!</a></li><li><a href="#macro_rules!-crates_web-core_target_debug_build_markup5ever-ff81b128b7fa5176_out_generated_rs">macro_rules!</a></li><li><a href="#macro_rules!-crates_web-core_target_wasm32-unknown-unknown_debug_build_markup5ever-7e1442a908c618a0_out_generated_rs">macro_rules!</a></li><li><a href="#macro_rules!-crates_web-core_target_wasm32-unknown-unknown_debug_build_markup5ever-986f11d2a9596e89_out_generated_rs">macro_rules!</a></li><li><a href="#macro_rules!-crates_web-core_target_wasm32-unknown-unknown_debug_build_markup5ever-cef8c331758ea392_out_generated_rs">macro_rules!</a></li><li><a href="#macro_rules!-crates_web-core_target_wasm32-unknown-unknown_debug_build_markup5ever-f30fb9bb29d97dd7_out_generated_rs">macro_rules!</a></li><li><a href="#LocalNameStaticSet-crates_web-core_target_wasm32-unknown-unknown_debug_build_markup5ever-f664ab89b244c60e_out_generated_rs">LocalNameStaticSet</a></li><li><a href="#macro_rules!-crates_web-core_target_wasm32-unknown-unknown_debug_build_markup5ever-f664ab89b244c60e_out_generated_rs">macro_rules!</a></li><li><a href="#NamespaceStaticSet-crates_web-core_target_wasm32-unknown-unknown_debug_build_markup5ever-f664ab89b244c60e_out_generated_rs">NamespaceStaticSet</a></li><li><a href="#PrefixStaticSet-crates_web-core_target_wasm32-unknown-unknown_debug_build_markup5ever-f664ab89b244c60e_out_generated_rs">PrefixStaticSet</a></li><li><a href="#TestAtomStaticSet-crates_web-core_target_wasm32-unknown-unknown_debug_build_string_cache-985ae25072a03424_out_test_atom_rs">TestAtomStaticSet</a></li><li><a href="#macro_rules!-crates_web-core_target_wasm32-unknown-unknown_release_build_markup5ever-0d37cb10e8dfc31f_out_generated_rs">macro_rules!</a></li><li><a href="#macro_rules!-crates_web-core_target_wasm32-unknown-unknown_release_build_markup5ever-2bc4231ac3beef47_out_generated_rs">macro_rules!</a></li><li><a href="#macro_rules!-crates_web-core_target_wasm32-unknown-unknown_release_build_markup5ever-7b5eaa487749d834_out_generated_rs">macro_rules!</a></li><li><a href="#macro_rules!-crates_web-core_target_wasm32-unknown-unknown_release_build_markup5ever-9a83238e4010e823_out_generated_rs">macro_rules!</a></li><li><a href="#macro_rules!-crates_web-core_target_wasm32-unknown-unknown_release_build_markup5ever-befa648f2ce3569a_out_generated_rs">macro_rules!</a></li><li><a href="#LocalNameStaticSet-crates_web-core_target_wasm32-unknown-unknown_release_build_markup5ever-cfc9320ddbc4c10b_out_generated_rs">LocalNameStaticSet</a></li><li><a href="#macro_rules!-crates_web-core_target_wasm32-unknown-unknown_release_build_markup5ever-cfc9320ddbc4c10b_out_generated_rs">macro_rules!</a></li><li><a href="#NamespaceStaticSet-crates_web-core_target_wasm32-unknown-unknown_release_build_markup5ever-cfc9320ddbc4c10b_out_generated_rs">NamespaceStaticSet</a></li><li><a href="#PrefixStaticSet-crates_web-core_target_wasm32-unknown-unknown_release_build_markup5ever-cfc9320ddbc4c10b_out_generated_rs">PrefixStaticSet</a></li><li><a href="#TestAtomStaticSet-crates_web-core_target_wasm32-unknown-unknown_release_build_string_cache-c2e9867fc4caee97_out_test_atom_rs">TestAtomStaticSet</a></li><li><a href="#add-crates_web-utils_src_lib_rs">add</a></li><li><a href="#reverse_string-crates_web-utils_src_lib_rs">reverse_string</a></li>
+        </ul>
+    </nav>
+    <main>
+        
+        <div class="file-group">
+            <h3 class="file-path">crates/web-core/src/blueprint.rs</h3>
+            
+                <section class="entry" id="bind_markers_to_node_paths-crates_web-core_src_blueprint_rs">
+                    <div class="entry-header">
+                        <span class="type">function</span>
+                        <h2 class="name">bind_markers_to_node_paths</h2>
+                    </div>
+                    
+                    
+                        <div class="warnings">
+                            <strong>Documentation Gaps:</strong>
+                            <ul>
+                                <li>Missing description</li><li>Missing @param documentation for: bindings</li><li>Missing @param documentation for: node_indices</li><li>Missing @param documentation for: usize</li>
+                            </ul>
+                        </div>
+                    
+
+                    <div class="description"><em>No description provided.</em></div>
+                    
+                    
+
+                    
+
+                    
+                    
+                    <div class="footer">
+                        <a href="file://crates/web-core/src/blueprint.rs" target="_blank">crates/web-core/src/blueprint.rs:55</a>
+                    </div>
+                </section>
+            
+                <section class="entry" id="Blueprint-crates_web-core_src_blueprint_rs">
+                    <div class="entry-header">
+                        <span class="type">struct</span>
+                        <h2 class="name">Blueprint</h2>
+                    </div>
+                    
+                    
+                        <div class="warnings">
+                            <strong>Documentation Gaps:</strong>
+                            <ul>
+                                <li>Missing description</li>
+                            </ul>
+                        </div>
+                    
+
+                    <div class="description"><em>No description provided.</em></div>
+                    
+                    
+
+                    
+
+                    
+                    
+                    <div class="footer">
+                        <a href="file://crates/web-core/src/blueprint.rs" target="_blank">crates/web-core/src/blueprint.rs:34</a>
+                    </div>
+                </section>
+            
+                <section class="entry" id="BlueprintAttribute-crates_web-core_src_blueprint_rs">
+                    <div class="entry-header">
+                        <span class="type">struct</span>
+                        <h2 class="name">BlueprintAttribute</h2>
+                    </div>
+                    
+                    
+                        <div class="warnings">
+                            <strong>Documentation Gaps:</strong>
+                            <ul>
+                                <li>Missing description</li>
+                            </ul>
+                        </div>
+                    
+
+                    <div class="description"><em>No description provided.</em></div>
+                    
+                    
+
+                    
+
+                    
+                    
+                    <div class="footer">
+                        <a href="file://crates/web-core/src/blueprint.rs" target="_blank">crates/web-core/src/blueprint.rs:14</a>
+                    </div>
+                </section>
+            
+                <section class="entry" id="BlueprintNode-crates_web-core_src_blueprint_rs">
+                    <div class="entry-header">
+                        <span class="type">struct</span>
+                        <h2 class="name">BlueprintNode</h2>
+                    </div>
+                    
+                    
+                        <div class="warnings">
+                            <strong>Documentation Gaps:</strong>
+                            <ul>
+                                <li>Missing description</li>
+                            </ul>
+                        </div>
+                    
+
+                    <div class="description"><em>No description provided.</em></div>
+                    
+                    
+
+                    
+
+                    
+                    
+                    <div class="footer">
+                        <a href="file://crates/web-core/src/blueprint.rs" target="_blank">crates/web-core/src/blueprint.rs:24</a>
+                    </div>
+                </section>
+            
+                <section class="entry" id="build_blueprint_tree-crates_web-core_src_blueprint_rs">
+                    <div class="entry-header">
+                        <span class="type">function</span>
+                        <h2 class="name">build_blueprint_tree</h2>
+                    </div>
+                    
+                    
+                        <div class="warnings">
+                            <strong>Documentation Gaps:</strong>
+                            <ul>
+                                <li>Missing description</li><li>Missing @param documentation for: html</li><li>Missing @param documentation for: _bindings_array</li>
+                            </ul>
+                        </div>
+                    
+
+                    <div class="description"><em>No description provided.</em></div>
+                    
+                    
+
+                    
+
+                    
+                    
+                    <div class="footer">
+                        <a href="file://crates/web-core/src/blueprint.rs" target="_blank">crates/web-core/src/blueprint.rs:40</a>
+                    </div>
+                </section>
+            
+                <section class="entry" id="pub-crates_web-core_src_blueprint_rs">
+                    <div class="entry-header">
+                        <span class="type">variable</span>
+                        <h2 class="name">pub</h2>
+                    </div>
+                    
+                    
+                        <div class="warnings">
+                            <strong>Documentation Gaps:</strong>
+                            <ul>
+                                <li>Missing description</li>
+                            </ul>
+                        </div>
+                    
+
+                    <div class="description"><em>No description provided.</em></div>
+                    
+                    
+
+                    
+
+                    
+                    
+                    <div class="footer">
+                        <a href="file://crates/web-core/src/blueprint.rs" target="_blank">crates/web-core/src/blueprint.rs:7</a>
+                    </div>
+                </section>
+            
+        </div>
+    
+        <div class="file-group">
+            <h3 class="file-path">crates/web-core/src/component.rs</h3>
+            
+                <section class="entry" id="clear_component_changed_properties-crates_web-core_src_component_rs">
+                    <div class="entry-header">
+                        <span class="type">function</span>
+                        <h2 class="name">clear_component_changed_properties</h2>
+                    </div>
+                    
+                    
+
+                    <div class="description">Clears the list of changed properties for a component.<br>This should be called after the renderer has successfully applied the<br>changes to the DOM to reset the change tracker.</div>
+                    
+                    
+                        <div class="params">
+                            <h3>Parameters</h3>
+                            <ul>
+                                
+                                    <li class="">
+                                        <strong>cid</strong> <small></small> - The unique component ID.
+                                    </li>
+                                
+                            </ul>
+                        </div>
+                    
+
+                    
+
+                    
+                    
+                    <div class="footer">
+                        <a href="file://crates/web-core/src/component.rs" target="_blank">crates/web-core/src/component.rs:108</a>
+                    </div>
+                </section>
+            
+                <section class="entry" id="ComponentState-crates_web-core_src_component_rs">
+                    <div class="entry-header">
+                        <span class="type">struct</span>
+                        <h2 class="name">ComponentState</h2>
+                    </div>
+                    
+                    
+
+                    <div class="description">Internal state tracker for a single component instance.</div>
+                    
+                    
+
+                    
+
+                    
+                    
+                    <div class="footer">
+                        <a href="file://crates/web-core/src/component.rs" target="_blank">crates/web-core/src/component.rs:6</a>
+                    </div>
+                </section>
+            
+                <section class="entry" id="get_component_changed_properties-crates_web-core_src_component_rs">
+                    <div class="entry-header">
+                        <span class="type">function</span>
+                        <h2 class="name">get_component_changed_properties</h2>
+                    </div>
+                    
+                    
+
+                    <div class="description">Returns an object containing all properties that have changed for the component.<br>This is typically used by the renderer to determine which parts of the DOM<br>need to be patched.</div>
+                    
+                    
+                        <div class="params">
+                            <h3>Parameters</h3>
+                            <ul>
+                                
+                                    <li class="">
+                                        <strong>cid</strong> <small></small> - The unique component ID.
+                                    </li>
+                                
+                            </ul>
+                        </div>
+                    
+
+                    
+                        <div class="returns">
+                            <h3>Returns</h3>
+                            <p><strong></strong> A JavaScript object where keys are property names and values are the previous values.</p>
+                        </div>
+                    
+
+                    
+                    
+                    <div class="footer">
+                        <a href="file://crates/web-core/src/component.rs" target="_blank">crates/web-core/src/component.rs:88</a>
+                    </div>
+                </section>
+            
+                <section class="entry" id="get_component_property-crates_web-core_src_component_rs">
+                    <div class="entry-header">
+                        <span class="type">function</span>
+                        <h2 class="name">get_component_property</h2>
+                    </div>
+                    
+                    
+
+                    <div class="description">Retrieves the current value of a property for a specific component instance.</div>
+                    
+                    
+                        <div class="params">
+                            <h3>Parameters</h3>
+                            <ul>
+                                
+                                    <li class="">
+                                        <strong>cid</strong> <small></small> - The unique component ID.
+                                    </li>
+                                
+                                    <li class="">
+                                        <strong>name</strong> <small></small> - The name of the property to retrieve.
+                                    </li>
+                                
+                            </ul>
+                        </div>
+                    
+
+                    
+                        <div class="returns">
+                            <h3>Returns</h3>
+                            <p><strong></strong> The property value, or <code>undefined</code> if the component or property doesn't exist.</p>
+                        </div>
+                    
+
+                    
+                    
+                    <div class="footer">
+                        <a href="file://crates/web-core/src/component.rs" target="_blank">crates/web-core/src/component.rs:70</a>
+                    </div>
+                </section>
+            
+                <section class="entry" id="new-crates_web-core_src_component_rs">
+                    <div class="entry-header">
+                        <span class="type">function</span>
+                        <h2 class="name">new</h2>
+                    </div>
+                    
+                    
+                        <div class="warnings">
+                            <strong>Documentation Gaps:</strong>
+                            <ul>
+                                <li>Missing description</li>
+                            </ul>
+                        </div>
+                    
+
+                    <div class="description"><em>No description provided.</em></div>
+                    
+                    
+
+                    
+
+                    
+                    
+                    <div class="footer">
+                        <a href="file://crates/web-core/src/component.rs" target="_blank">crates/web-core/src/component.rs:14</a>
+                    </div>
+                </section>
+            
+                <section class="entry" id="register_component-crates_web-core_src_component_rs">
+                    <div class="entry-header">
+                        <span class="type">function</span>
+                        <h2 class="name">register_component</h2>
+                    </div>
+                    
+                    
+
+                    <div class="description">Generates and returns a unique identifier for a new component instance.<br>This ID should be stored by the JavaScript wrapper to identify the component's<br>state during property updates or cleanup.</div>
+                    
+                    
+
+                    
+                        <div class="returns">
+                            <h3>Returns</h3>
+                            <p><strong></strong> A unique 32-bit unsigned integer component ID.</p>
+                        </div>
+                    
+
+                    
+                    
+                    <div class="footer">
+                        <a href="file://crates/web-core/src/component.rs" target="_blank">crates/web-core/src/component.rs:28</a>
+                    </div>
+                </section>
+            
+                <section class="entry" id="remove_component-crates_web-core_src_component_rs">
+                    <div class="entry-header">
+                        <span class="type">function</span>
+                        <h2 class="name">remove_component</h2>
+                    </div>
+                    
+                    
+
+                    <div class="description">Completely removes a component and all its associated state.<br>This cleans up component properties, scoped signal values, and scoped subscribers<br>to prevent memory leaks.</div>
+                    
+                    
+                        <div class="params">
+                            <h3>Parameters</h3>
+                            <ul>
+                                
+                                    <li class="">
+                                        <strong>cid</strong> <small></small> - The unique component ID to remove.
+                                    </li>
+                                
+                            </ul>
+                        </div>
+                    
+
+                    
+
+                    
+                    
+                    <div class="footer">
+                        <a href="file://crates/web-core/src/component.rs" target="_blank">crates/web-core/src/component.rs:124</a>
+                    </div>
+                </section>
+            
+                <section class="entry" id="update_component_property-crates_web-core_src_component_rs">
+                    <div class="entry-header">
+                        <span class="type">function</span>
+                        <h2 class="name">update_component_property</h2>
+                    </div>
+                    
+                    
+
+                    <div class="description">Updates a specific property for a component and tracks the change.<br>If the new value is different from the current value, the property is marked<br>as changed and the function returns <code>true</code>.</div>
+                    
+                    
+                        <div class="params">
+                            <h3>Parameters</h3>
+                            <ul>
+                                
+                                    <li class="">
+                                        <strong>cid</strong> <small></small> - The unique component ID.
+                                    </li>
+                                
+                                    <li class="">
+                                        <strong>name</strong> <small></small> - The name of the property to update.
+                                    </li>
+                                
+                                    <li class="">
+                                        <strong>value</strong> <small></small> - The new value to assign.
+                                    </li>
+                                
+                            </ul>
+                        </div>
+                    
+
+                    
+                        <div class="returns">
+                            <h3>Returns</h3>
+                            <p><strong></strong> <code>true</code> if the value was actually changed, <code>false</code> otherwise.</p>
+                        </div>
+                    
+
+                    
+                    
+                    <div class="footer">
+                        <a href="file://crates/web-core/src/component.rs" target="_blank">crates/web-core/src/component.rs:47</a>
+                    </div>
+                </section>
+            
+        </div>
+    
+        <div class="file-group">
+            <h3 class="file-path">crates/web-core/src/lib.rs</h3>
+            
+                <section class="entry" id="register_globals-crates_web-core_src_lib_rs">
+                    <div class="entry-header">
+                        <span class="type">function</span>
+                        <h2 class="name">register_globals</h2>
+                    </div>
+                    
+                    
+                        <div class="warnings">
+                            <strong>Documentation Gaps:</strong>
+                            <ul>
+                                <li>Missing description</li>
+                            </ul>
+                        </div>
+                    
+
+                    <div class="description"><em>No description provided.</em></div>
+                    
+                    
+
+                    
+
+                    
+                    
+                    <div class="footer">
+                        <a href="file://crates/web-core/src/lib.rs" target="_blank">crates/web-core/src/lib.rs:19</a>
+                    </div>
+                </section>
+            
+                <section class="entry" id="test_component_state_isolation-crates_web-core_src_lib_rs">
+                    <div class="entry-header">
+                        <span class="type">function</span>
+                        <h2 class="name">test_component_state_isolation</h2>
+                    </div>
+                    
+                    
+                        <div class="warnings">
+                            <strong>Documentation Gaps:</strong>
+                            <ul>
+                                <li>Missing description</li>
+                            </ul>
+                        </div>
+                    
+
+                    <div class="description"><em>No description provided.</em></div>
+                    
+                    
+
+                    
+
+                    
+                    
+                    <div class="footer">
+                        <a href="file://crates/web-core/src/lib.rs" target="_blank">crates/web-core/src/lib.rs:543</a>
+                    </div>
+                </section>
+            
+                <section class="entry" id="test_detect_binding_bool-crates_web-core_src_lib_rs">
+                    <div class="entry-header">
+                        <span class="type">function</span>
+                        <h2 class="name">test_detect_binding_bool</h2>
+                    </div>
+                    
+                    
+                        <div class="warnings">
+                            <strong>Documentation Gaps:</strong>
+                            <ul>
+                                <li>Missing description</li>
+                            </ul>
+                        </div>
+                    
+
+                    <div class="description"><em>No description provided.</em></div>
+                    
+                    
+
+                    
+
+                    
+                    
+                    <div class="footer">
+                        <a href="file://crates/web-core/src/lib.rs" target="_blank">crates/web-core/src/lib.rs:95</a>
+                    </div>
+                </section>
+            
+                <section class="entry" id="test_detect_binding_edge_cases-crates_web-core_src_lib_rs">
+                    <div class="entry-header">
+                        <span class="type">function</span>
+                        <h2 class="name">test_detect_binding_edge_cases</h2>
+                    </div>
+                    
+                    
+                        <div class="warnings">
+                            <strong>Documentation Gaps:</strong>
+                            <ul>
+                                <li>Missing description</li>
+                            </ul>
+                        </div>
+                    
+
+                    <div class="description"><em>No description provided.</em></div>
+                    
+                    
+
+                    
+
+                    
+                    
+                    <div class="footer">
+                        <a href="file://crates/web-core/src/lib.rs" target="_blank">crates/web-core/src/lib.rs:101</a>
+                    </div>
+                </section>
+            
+                <section class="entry" id="test_detect_binding_event-crates_web-core_src_lib_rs">
+                    <div class="entry-header">
+                        <span class="type">function</span>
+                        <h2 class="name">test_detect_binding_event</h2>
+                    </div>
+                    
+                    
+                        <div class="warnings">
+                            <strong>Documentation Gaps:</strong>
+                            <ul>
+                                <li>Missing description</li>
+                            </ul>
+                        </div>
+                    
+
+                    <div class="description"><em>No description provided.</em></div>
+                    
+                    
+
+                    
+
+                    
+                    
+                    <div class="footer">
+                        <a href="file://crates/web-core/src/lib.rs" target="_blank">crates/web-core/src/lib.rs:75</a>
+                    </div>
+                </section>
+            
+                <section class="entry" id="test_detect_binding_event_modifiers-crates_web-core_src_lib_rs">
+                    <div class="entry-header">
+                        <span class="type">function</span>
+                        <h2 class="name">test_detect_binding_event_modifiers</h2>
+                    </div>
+                    
+                    
+                        <div class="warnings">
+                            <strong>Documentation Gaps:</strong>
+                            <ul>
+                                <li>Missing description</li>
+                            </ul>
+                        </div>
+                    
+
+                    <div class="description"><em>No description provided.</em></div>
+                    
+                    
+
+                    
+
+                    
+                    
+                    <div class="footer">
+                        <a href="file://crates/web-core/src/lib.rs" target="_blank">crates/web-core/src/lib.rs:82</a>
+                    </div>
+                </section>
+            
+                <section class="entry" id="test_detect_binding_multiple_suffixes-crates_web-core_src_lib_rs">
+                    <div class="entry-header">
+                        <span class="type">function</span>
+                        <h2 class="name">test_detect_binding_multiple_suffixes</h2>
+                    </div>
+                    
+                    
+                        <div class="warnings">
+                            <strong>Documentation Gaps:</strong>
+                            <ul>
+                                <li>Missing description</li>
+                            </ul>
+                        </div>
+                    
+
+                    <div class="description"><em>No description provided.</em></div>
+                    
+                    
+
+                    
+
+                    
+                    
+                    <div class="footer">
+                        <a href="file://crates/web-core/src/lib.rs" target="_blank">crates/web-core/src/lib.rs:112</a>
+                    </div>
+                </section>
+            
+                <section class="entry" id="test_detect_binding_property-crates_web-core_src_lib_rs">
+                    <div class="entry-header">
+                        <span class="type">function</span>
+                        <h2 class="name">test_detect_binding_property</h2>
+                    </div>
+                    
+                    
+                        <div class="warnings">
+                            <strong>Documentation Gaps:</strong>
+                            <ul>
+                                <li>Missing description</li>
+                            </ul>
+                        </div>
+                    
+
+                    <div class="description"><em>No description provided.</em></div>
+                    
+                    
+
+                    
+
+                    
+                    
+                    <div class="footer">
+                        <a href="file://crates/web-core/src/lib.rs" target="_blank">crates/web-core/src/lib.rs:89</a>
+                    </div>
+                </section>
+            
+                <section class="entry" id="test_escape_html_all-crates_web-core_src_lib_rs">
+                    <div class="entry-header">
+                        <span class="type">function</span>
+                        <h2 class="name">test_escape_html_all</h2>
+                    </div>
+                    
+                    
+                        <div class="warnings">
+                            <strong>Documentation Gaps:</strong>
+                            <ul>
+                                <li>Missing description</li>
+                            </ul>
+                        </div>
+                    
+
+                    <div class="description"><em>No description provided.</em></div>
+                    
+                    
+
+                    
+
+                    
+                    
+                    <div class="footer">
+                        <a href="file://crates/web-core/src/lib.rs" target="_blank">crates/web-core/src/lib.rs:70</a>
+                    </div>
+                </section>
+            
+                <section class="entry" id="test_escape_html_ampersand-crates_web-core_src_lib_rs">
+                    <div class="entry-header">
+                        <span class="type">function</span>
+                        <h2 class="name">test_escape_html_ampersand</h2>
+                    </div>
+                    
+                    
+                        <div class="warnings">
+                            <strong>Documentation Gaps:</strong>
+                            <ul>
+                                <li>Missing description</li>
+                            </ul>
+                        </div>
+                    
+
+                    <div class="description"><em>No description provided.</em></div>
+                    
+                    
+
+                    
+
+                    
+                    
+                    <div class="footer">
+                        <a href="file://crates/web-core/src/lib.rs" target="_blank">crates/web-core/src/lib.rs:52</a>
+                    </div>
+                </section>
+            
+                <section class="entry" id="test_escape_html_angle_brackets-crates_web-core_src_lib_rs">
+                    <div class="entry-header">
+                        <span class="type">function</span>
+                        <h2 class="name">test_escape_html_angle_brackets</h2>
+                    </div>
+                    
+                    
+                        <div class="warnings">
+                            <strong>Documentation Gaps:</strong>
+                            <ul>
+                                <li>Missing description</li>
+                            </ul>
+                        </div>
+                    
+
+                    <div class="description"><em>No description provided.</em></div>
+                    
+                    
+
+                    
+
+                    
+                    
+                    <div class="footer">
+                        <a href="file://crates/web-core/src/lib.rs" target="_blank">crates/web-core/src/lib.rs:58</a>
+                    </div>
+                </section>
+            
+                <section class="entry" id="test_escape_html_noop-crates_web-core_src_lib_rs">
+                    <div class="entry-header">
+                        <span class="type">function</span>
+                        <h2 class="name">test_escape_html_noop</h2>
+                    </div>
+                    
+                    
+                        <div class="warnings">
+                            <strong>Documentation Gaps:</strong>
+                            <ul>
+                                <li>Missing description</li>
+                            </ul>
+                        </div>
+                    
+
+                    <div class="description"><em>No description provided.</em></div>
+                    
+                    
+
+                    
+
+                    
+                    
+                    <div class="footer">
+                        <a href="file://crates/web-core/src/lib.rs" target="_blank">crates/web-core/src/lib.rs:45</a>
+                    </div>
+                </section>
+            
+                <section class="entry" id="test_escape_html_quotes-crates_web-core_src_lib_rs">
+                    <div class="entry-header">
+                        <span class="type">function</span>
+                        <h2 class="name">test_escape_html_quotes</h2>
+                    </div>
+                    
+                    
+                        <div class="warnings">
+                            <strong>Documentation Gaps:</strong>
+                            <ul>
+                                <li>Missing description</li>
+                            </ul>
+                        </div>
+                    
+
+                    <div class="description"><em>No description provided.</em></div>
+                    
+                    
+
+                    
+
+                    
+                    
+                    <div class="footer">
+                        <a href="file://crates/web-core/src/lib.rs" target="_blank">crates/web-core/src/lib.rs:64</a>
+                    </div>
+                </section>
+            
+                <section class="entry" id="test_is_signal_like-crates_web-core_src_lib_rs">
+                    <div class="entry-header">
+                        <span class="type">function</span>
+                        <h2 class="name">test_is_signal_like</h2>
+                    </div>
+                    
+                    
+                        <div class="warnings">
+                            <strong>Documentation Gaps:</strong>
+                            <ul>
+                                <li>Missing description</li>
+                            </ul>
+                        </div>
+                    
+
+                    <div class="description"><em>No description provided.</em></div>
+                    
+                    
+
+                    
+
+                    
+                    
+                    <div class="footer">
+                        <a href="file://crates/web-core/src/lib.rs" target="_blank">crates/web-core/src/lib.rs:158</a>
+                    </div>
+                </section>
+            
+                <section class="entry" id="test_is_template_result-crates_web-core_src_lib_rs">
+                    <div class="entry-header">
+                        <span class="type">function</span>
+                        <h2 class="name">test_is_template_result</h2>
+                    </div>
+                    
+                    
+                        <div class="warnings">
+                            <strong>Documentation Gaps:</strong>
+                            <ul>
+                                <li>Missing description</li>
+                            </ul>
+                        </div>
+                    
+
+                    <div class="description"><em>No description provided.</em></div>
+                    
+                    
+
+                    
+
+                    
+                    
+                    <div class="footer">
+                        <a href="file://crates/web-core/src/lib.rs" target="_blank">crates/web-core/src/lib.rs:143</a>
+                    </div>
+                </section>
+            
+                <section class="entry" id="test_js_to_string_various-crates_web-core_src_lib_rs">
+                    <div class="entry-header">
+                        <span class="type">function</span>
+                        <h2 class="name">test_js_to_string_various</h2>
+                    </div>
+                    
+                    
+                        <div class="warnings">
+                            <strong>Documentation Gaps:</strong>
+                            <ul>
+                                <li>Missing description</li>
+                            </ul>
+                        </div>
+                    
+
+                    <div class="description"><em>No description provided.</em></div>
+                    
+                    
+
+                    
+
+                    
+                    
+                    <div class="footer">
+                        <a href="file://crates/web-core/src/lib.rs" target="_blank">crates/web-core/src/lib.rs:133</a>
+                    </div>
+                </section>
+            
+                <section class="entry" id="test_parse_event_modifiers-crates_web-core_src_lib_rs">
+                    <div class="entry-header">
+                        <span class="type">function</span>
+                        <h2 class="name">test_parse_event_modifiers</h2>
+                    </div>
+                    
+                    
+                        <div class="warnings">
+                            <strong>Documentation Gaps:</strong>
+                            <ul>
+                                <li>Missing description</li>
+                            </ul>
+                        </div>
+                    
+
+                    <div class="description"><em>No description provided.</em></div>
+                    
+                    
+
+                    
+
+                    
+                    
+                    <div class="footer">
+                        <a href="file://crates/web-core/src/lib.rs" target="_blank">crates/web-core/src/lib.rs:118</a>
+                    </div>
+                </section>
+            
+                <section class="entry" id="test_process_template_html_escaping-crates_web-core_src_lib_rs">
+                    <div class="entry-header">
+                        <span class="type">function</span>
+                        <h2 class="name">test_process_template_html_escaping</h2>
+                    </div>
+                    
+                    
+                        <div class="warnings">
+                            <strong>Documentation Gaps:</strong>
+                            <ul>
+                                <li>Missing description</li>
+                            </ul>
+                        </div>
+                    
+
+                    <div class="description"><em>No description provided.</em></div>
+                    
+                    
+
+                    
+
+                    
+                    
+                    <div class="footer">
+                        <a href="file://crates/web-core/src/lib.rs" target="_blank">crates/web-core/src/lib.rs:321</a>
+                    </div>
+                </section>
+            
+                <section class="entry" id="test_process_template_signal_wrapping-crates_web-core_src_lib_rs">
+                    <div class="entry-header">
+                        <span class="type">function</span>
+                        <h2 class="name">test_process_template_signal_wrapping</h2>
+                    </div>
+                    
+                    
+                        <div class="warnings">
+                            <strong>Documentation Gaps:</strong>
+                            <ul>
+                                <li>Missing description</li>
+                            </ul>
+                        </div>
+                    
+
+                    <div class="description"><em>No description provided.</em></div>
+                    
+                    
+
+                    
+
+                    
+                    
+                    <div class="footer">
+                        <a href="file://crates/web-core/src/lib.rs" target="_blank">crates/web-core/src/lib.rs:369</a>
+                    </div>
+                </section>
+            
+                <section class="entry" id="test_process_template_simple_text-crates_web-core_src_lib_rs">
+                    <div class="entry-header">
+                        <span class="type">function</span>
+                        <h2 class="name">test_process_template_simple_text</h2>
+                    </div>
+                    
+                    
+                        <div class="warnings">
+                            <strong>Documentation Gaps:</strong>
+                            <ul>
+                                <li>Missing description</li>
+                            </ul>
+                        </div>
+                    
+
+                    <div class="description"><em>No description provided.</em></div>
+                    
+                    
+
+                    
+
+                    
+                    
+                    <div class="footer">
+                        <a href="file://crates/web-core/src/lib.rs" target="_blank">crates/web-core/src/lib.rs:210</a>
+                    </div>
+                </section>
+            
+                <section class="entry" id="test_serialize_deserialize_boolean-crates_web-core_src_lib_rs">
+                    <div class="entry-header">
+                        <span class="type">function</span>
+                        <h2 class="name">test_serialize_deserialize_boolean</h2>
+                    </div>
+                    
+                    
+                        <div class="warnings">
+                            <strong>Documentation Gaps:</strong>
+                            <ul>
+                                <li>Missing description</li>
+                            </ul>
+                        </div>
+                    
+
+                    <div class="description"><em>No description provided.</em></div>
+                    
+                    
+
+                    
+
+                    
+                    
+                    <div class="footer">
+                        <a href="file://crates/web-core/src/lib.rs" target="_blank">crates/web-core/src/lib.rs:464</a>
+                    </div>
+                </section>
+            
+                <section class="entry" id="test_serialize_deserialize_number-crates_web-core_src_lib_rs">
+                    <div class="entry-header">
+                        <span class="type">function</span>
+                        <h2 class="name">test_serialize_deserialize_number</h2>
+                    </div>
+                    
+                    
+                        <div class="warnings">
+                            <strong>Documentation Gaps:</strong>
+                            <ul>
+                                <li>Missing description</li>
+                            </ul>
+                        </div>
+                    
+
+                    <div class="description"><em>No description provided.</em></div>
+                    
+                    
+
+                    
+
+                    
+                    
+                    <div class="footer">
+                        <a href="file://crates/web-core/src/lib.rs" target="_blank">crates/web-core/src/lib.rs:452</a>
+                    </div>
+                </section>
+            
+                <section class="entry" id="test_serialize_deserialize_number_edge_cases-crates_web-core_src_lib_rs">
+                    <div class="entry-header">
+                        <span class="type">function</span>
+                        <h2 class="name">test_serialize_deserialize_number_edge_cases</h2>
+                    </div>
+                    
+                    
+                        <div class="warnings">
+                            <strong>Documentation Gaps:</strong>
+                            <ul>
+                                <li>Missing description</li>
+                            </ul>
+                        </div>
+                    
+
+                    <div class="description"><em>No description provided.</em></div>
+                    
+                    
+
+                    
+
+                    
+                    
+                    <div class="footer">
+                        <a href="file://crates/web-core/src/lib.rs" target="_blank">crates/web-core/src/lib.rs:526</a>
+                    </div>
+                </section>
+            
+                <section class="entry" id="test_serialize_deserialize_object-crates_web-core_src_lib_rs">
+                    <div class="entry-header">
+                        <span class="type">function</span>
+                        <h2 class="name">test_serialize_deserialize_object</h2>
+                    </div>
+                    
+                    
+                        <div class="warnings">
+                            <strong>Documentation Gaps:</strong>
+                            <ul>
+                                <li>Missing description</li>
+                            </ul>
+                        </div>
+                    
+
+                    <div class="description"><em>No description provided.</em></div>
+                    
+                    
+
+                    
+
+                    
+                    
+                    <div class="footer">
+                        <a href="file://crates/web-core/src/lib.rs" target="_blank">crates/web-core/src/lib.rs:482</a>
+                    </div>
+                </section>
+            
+                <section class="entry" id="test_serialize_deserialize_string-crates_web-core_src_lib_rs">
+                    <div class="entry-header">
+                        <span class="type">function</span>
+                        <h2 class="name">test_serialize_deserialize_string</h2>
+                    </div>
+                    
+                    
+                        <div class="warnings">
+                            <strong>Documentation Gaps:</strong>
+                            <ul>
+                                <li>Missing description</li>
+                            </ul>
+                        </div>
+                    
+
+                    <div class="description"><em>No description provided.</em></div>
+                    
+                    
+
+                    
+
+                    
+                    
+                    <div class="footer">
+                        <a href="file://crates/web-core/src/lib.rs" target="_blank">crates/web-core/src/lib.rs:443</a>
+                    </div>
+                </section>
+            
+                <section class="entry" id="test_signal_create_get_set-crates_web-core_src_lib_rs">
+                    <div class="entry-header">
+                        <span class="type">function</span>
+                        <h2 class="name">test_signal_create_get_set</h2>
+                    </div>
+                    
+                    
+                        <div class="warnings">
+                            <strong>Documentation Gaps:</strong>
+                            <ul>
+                                <li>Missing description</li>
+                            </ul>
+                        </div>
+                    
+
+                    <div class="description"><em>No description provided.</em></div>
+                    
+                    
+
+                    
+
+                    
+                    
+                    <div class="footer">
+                        <a href="file://crates/web-core/src/lib.rs" target="_blank">crates/web-core/src/lib.rs:173</a>
+                    </div>
+                </section>
+            
+        </div>
+    
+        <div class="file-group">
+            <h3 class="file-path">crates/web-core/src/signal.rs</h3>
+            
+                <section class="entry" id="create_signal-crates_web-core_src_signal_rs">
+                    <div class="entry-header">
+                        <span class="type">function</span>
+                        <h2 class="name">create_signal</h2>
+                    </div>
+                    
+                    
+
+                    <div class="description">Creates a new signal with an initial value.<br>Signals can be global (when <code>cid</code> is <code>None</code>) or scoped to a specific component<br>(when <code>cid</code> is <code>Some</code>). If the signal already exists, the initial value is ignored.</div>
+                    
+                    
+                        <div class="params">
+                            <h3>Parameters</h3>
+                            <ul>
+                                
+                                    <li class="">
+                                        <strong>key</strong> <small></small> - The unique identifier for the signal.
+                                    </li>
+                                
+                                    <li class="">
+                                        <strong>initial</strong> <small></small> - The initial value to assign to the signal.
+                                    </li>
+                                
+                                    <li class="">
+                                        <strong>cid</strong> <small></small> - Optional component ID for scoping.
+                                    </li>
+                                
+                            </ul>
+                        </div>
+                    
+
+                    
+                        <div class="returns">
+                            <h3>Returns</h3>
+                            <p><strong></strong> The initial value of the signal.</p>
+                        </div>
+                    
+
+                    
+                    
+                    <div class="footer">
+                        <a href="file://crates/web-core/src/signal.rs" target="_blank">crates/web-core/src/signal.rs:13</a>
+                    </div>
+                </section>
+            
+                <section class="entry" id="get_signal-crates_web-core_src_signal_rs">
+                    <div class="entry-header">
+                        <span class="type">function</span>
+                        <h2 class="name">get_signal</h2>
+                    </div>
+                    
+                    
+
+                    <div class="description">Retrieves the current value of a signal by its key.</div>
+                    
+                    
+                        <div class="params">
+                            <h3>Parameters</h3>
+                            <ul>
+                                
+                                    <li class="">
+                                        <strong>key</strong> <small></small> - The unique identifier for the signal.
+                                    </li>
+                                
+                                    <li class="">
+                                        <strong>cid</strong> <small></small> - Optional component ID for scoping.
+                                    </li>
+                                
+                            </ul>
+                        </div>
+                    
+
+                    
+                        <div class="returns">
+                            <h3>Returns</h3>
+                            <p><strong></strong> The current value of the signal, or <code>undefined</code> if not found.</p>
+                        </div>
+                    
+
+                    
+                    
+                    <div class="footer">
+                        <a href="file://crates/web-core/src/signal.rs" target="_blank">crates/web-core/src/signal.rs:38</a>
+                    </div>
+                </section>
+            
+                <section class="entry" id="on_signal_change-crates_web-core_src_signal_rs">
+                    <div class="entry-header">
+                        <span class="type">function</span>
+                        <h2 class="name">on_signal_change</h2>
+                    </div>
+                    
+                    
+
+                    <div class="description">Registers a callback function to be executed whenever the specified signal changes.</div>
+                    
+                    
+                        <div class="params">
+                            <h3>Parameters</h3>
+                            <ul>
+                                
+                                    <li class="">
+                                        <strong>key</strong> <small></small> - The unique identifier for the signal.
+                                    </li>
+                                
+                                    <li class="">
+                                        <strong>callback</strong> <small></small> - The function to invoke on change.
+                                    </li>
+                                
+                                    <li class="">
+                                        <strong>cid</strong> <small></small> - Optional component ID for scoping.
+                                    </li>
+                                
+                            </ul>
+                        </div>
+                    
+
+                    
+
+                    
+                    
+                    <div class="footer">
+                        <a href="file://crates/web-core/src/signal.rs" target="_blank">crates/web-core/src/signal.rs:94</a>
+                    </div>
+                </section>
+            
+        </div>
+    
+        <div class="file-group">
+            <h3 class="file-path">crates/web-core/src/template.rs</h3>
+            
+                <section class="entry" id="reset_binding_counter-crates_web-core_src_template_rs">
+                    <div class="entry-header">
+                        <span class="type">function</span>
+                        <h2 class="name">reset_binding_counter</h2>
+                    </div>
+                    
+                    
+
+                    <div class="description">Resets the internal global binding ID counter to zero.<br>This is typically called during tests or when refreshing the page<br>to ensure binding markers start from <code>b0</code>.</div>
+                    
+                    
+
+                    
+
+                    
+                    
+                    <div class="footer">
+                        <a href="file://crates/web-core/src/template.rs" target="_blank">crates/web-core/src/template.rs:128</a>
+                    </div>
+                </section>
+            
+        </div>
+    
+        <div class="file-group">
+            <h3 class="file-path">crates/web-core/src/util.rs</h3>
+            
+                <section class="entry" id="escape_html-crates_web-core_src_util_rs">
+                    <div class="entry-header">
+                        <span class="type">function</span>
+                        <h2 class="name">escape_html</h2>
+                    </div>
+                    
+                    
+                        <div class="warnings">
+                            <strong>Documentation Gaps:</strong>
+                            <ul>
+                                <li>Missing description</li><li>Missing @param documentation for: s</li>
+                            </ul>
+                        </div>
+                    
+
+                    <div class="description"><em>No description provided.</em></div>
+                    
+                    
+
+                    
+
+                    
+                    
+                    <div class="footer">
+                        <a href="file://crates/web-core/src/util.rs" target="_blank">crates/web-core/src/util.rs:11</a>
+                    </div>
+                </section>
+            
+                <section class="entry" id="is_signal_like-crates_web-core_src_util_rs">
+                    <div class="entry-header">
+                        <span class="type">function</span>
+                        <h2 class="name">is_signal_like</h2>
+                    </div>
+                    
+                    
+                        <div class="warnings">
+                            <strong>Documentation Gaps:</strong>
+                            <ul>
+                                <li>Missing description</li><li>Missing @param documentation for: val</li>
+                            </ul>
+                        </div>
+                    
+
+                    <div class="description"><em>No description provided.</em></div>
+                    
+                    
+
+                    
+
+                    
+                    
+                    <div class="footer">
+                        <a href="file://crates/web-core/src/util.rs" target="_blank">crates/web-core/src/util.rs:52</a>
+                    </div>
+                </section>
+            
+                <section class="entry" id="is_template_result-crates_web-core_src_util_rs">
+                    <div class="entry-header">
+                        <span class="type">function</span>
+                        <h2 class="name">is_template_result</h2>
+                    </div>
+                    
+                    
+                        <div class="warnings">
+                            <strong>Documentation Gaps:</strong>
+                            <ul>
+                                <li>Missing description</li><li>Missing @param documentation for: val</li>
+                            </ul>
+                        </div>
+                    
+
+                    <div class="description"><em>No description provided.</em></div>
+                    
+                    
+
+                    
+
+                    
+                    
+                    <div class="footer">
+                        <a href="file://crates/web-core/src/util.rs" target="_blank">crates/web-core/src/util.rs:41</a>
+                    </div>
+                </section>
+            
+                <section class="entry" id="js_to_string-crates_web-core_src_util_rs">
+                    <div class="entry-header">
+                        <span class="type">function</span>
+                        <h2 class="name">js_to_string</h2>
+                    </div>
+                    
+                    
+                        <div class="warnings">
+                            <strong>Documentation Gaps:</strong>
+                            <ul>
+                                <li>Missing description</li><li>Missing @param documentation for: val</li>
+                            </ul>
+                        </div>
+                    
+
+                    <div class="description"><em>No description provided.</em></div>
+                    
+                    
+
+                    
+
+                    
+                    
+                    <div class="footer">
+                        <a href="file://crates/web-core/src/util.rs" target="_blank">crates/web-core/src/util.rs:19</a>
+                    </div>
+                </section>
+            
+                <section class="entry" id="log_debug-crates_web-core_src_util_rs">
+                    <div class="entry-header">
+                        <span class="type">function</span>
+                        <h2 class="name">log_debug</h2>
+                    </div>
+                    
+                    
+                        <div class="warnings">
+                            <strong>Documentation Gaps:</strong>
+                            <ul>
+                                <li>Missing description</li><li>Missing @param documentation for: msg</li>
+                            </ul>
+                        </div>
+                    
+
+                    <div class="description"><em>No description provided.</em></div>
+                    
+                    
+
+                    
+
+                    
+                    
+                    <div class="footer">
+                        <a href="file://crates/web-core/src/util.rs" target="_blank">crates/web-core/src/util.rs:5</a>
+                    </div>
+                </section>
+            
+                <section class="entry" id="parse_event_modifiers-crates_web-core_src_util_rs">
+                    <div class="entry-header">
+                        <span class="type">function</span>
+                        <h2 class="name">parse_event_modifiers</h2>
+                    </div>
+                    
+                    
+                        <div class="warnings">
+                            <strong>Documentation Gaps:</strong>
+                            <ul>
+                                <li>Missing description</li><li>Missing @param documentation for: name</li>
+                            </ul>
+                        </div>
+                    
+
+                    <div class="description"><em>No description provided.</em></div>
+                    
+                    
+
+                    
+
+                    
+                    
+                    <div class="footer">
+                        <a href="file://crates/web-core/src/util.rs" target="_blank">crates/web-core/src/util.rs:87</a>
+                    </div>
+                </section>
+            
+        </div>
+    
+        <div class="file-group">
+            <h3 class="file-path">crates/web-core/target/debug/build/markup5ever-b14cb8222b378539/out/generated.rs</h3>
+            
+                <section class="entry" id="macro_rules!-crates_web-core_target_debug_build_markup5ever-b14cb8222b378539_out_generated_rs">
+                    <div class="entry-header">
+                        <span class="type">variable</span>
+                        <h2 class="name">macro_rules!</h2>
+                    </div>
+                    
+                    
+
+                    <div class="description">Maps the input of [<code>namespace_prefix!</code>](macro.namespace_prefix.html) to<br>the output of [<code>namespace_url!</code>](macro.namespace_url.html).</div>
+                    
+                    
+
+                    
+
+                    
+                    
+                    <div class="footer">
+                        <a href="file://crates/web-core/target/debug/build/markup5ever-b14cb8222b378539/out/generated.rs" target="_blank">crates/web-core/target/debug/build/markup5ever-b14cb8222b378539/out/generated.rs:2847</a>
+                    </div>
+                </section>
+            
+        </div>
+    
+        <div class="file-group">
+            <h3 class="file-path">crates/web-core/target/debug/build/markup5ever-ff81b128b7fa5176/out/generated.rs</h3>
+            
+                <section class="entry" id="macro_rules!-crates_web-core_target_debug_build_markup5ever-ff81b128b7fa5176_out_generated_rs">
+                    <div class="entry-header">
+                        <span class="type">variable</span>
+                        <h2 class="name">macro_rules!</h2>
+                    </div>
+                    
+                    
+
+                    <div class="description">Maps the input of [<code>namespace_prefix!</code>](macro.namespace_prefix.html) to<br>the output of [<code>namespace_url!</code>](macro.namespace_url.html).</div>
+                    
+                    
+
+                    
+
+                    
+                    
+                    <div class="footer">
+                        <a href="file://crates/web-core/target/debug/build/markup5ever-ff81b128b7fa5176/out/generated.rs" target="_blank">crates/web-core/target/debug/build/markup5ever-ff81b128b7fa5176/out/generated.rs:2847</a>
+                    </div>
+                </section>
+            
+        </div>
+    
+        <div class="file-group">
+            <h3 class="file-path">crates/web-core/target/wasm32-unknown-unknown/debug/build/markup5ever-7e1442a908c618a0/out/generated.rs</h3>
+            
+                <section class="entry" id="macro_rules!-crates_web-core_target_wasm32-unknown-unknown_debug_build_markup5ever-7e1442a908c618a0_out_generated_rs">
+                    <div class="entry-header">
+                        <span class="type">variable</span>
+                        <h2 class="name">macro_rules!</h2>
+                    </div>
+                    
+                    
+
+                    <div class="description">Maps the input of [<code>namespace_prefix!</code>](macro.namespace_prefix.html) to<br>the output of [<code>namespace_url!</code>](macro.namespace_url.html).</div>
+                    
+                    
+
+                    
+
+                    
+                    
+                    <div class="footer">
+                        <a href="file://crates/web-core/target/wasm32-unknown-unknown/debug/build/markup5ever-7e1442a908c618a0/out/generated.rs" target="_blank">crates/web-core/target/wasm32-unknown-unknown/debug/build/markup5ever-7e1442a908c618a0/out/generated.rs:2847</a>
+                    </div>
+                </section>
+            
+        </div>
+    
+        <div class="file-group">
+            <h3 class="file-path">crates/web-core/target/wasm32-unknown-unknown/debug/build/markup5ever-986f11d2a9596e89/out/generated.rs</h3>
+            
+                <section class="entry" id="macro_rules!-crates_web-core_target_wasm32-unknown-unknown_debug_build_markup5ever-986f11d2a9596e89_out_generated_rs">
+                    <div class="entry-header">
+                        <span class="type">variable</span>
+                        <h2 class="name">macro_rules!</h2>
+                    </div>
+                    
+                    
+
+                    <div class="description">Maps the input of [<code>namespace_prefix!</code>](macro.namespace_prefix.html) to<br>the output of [<code>namespace_url!</code>](macro.namespace_url.html).</div>
+                    
+                    
+
+                    
+
+                    
+                    
+                    <div class="footer">
+                        <a href="file://crates/web-core/target/wasm32-unknown-unknown/debug/build/markup5ever-986f11d2a9596e89/out/generated.rs" target="_blank">crates/web-core/target/wasm32-unknown-unknown/debug/build/markup5ever-986f11d2a9596e89/out/generated.rs:2847</a>
+                    </div>
+                </section>
+            
+        </div>
+    
+        <div class="file-group">
+            <h3 class="file-path">crates/web-core/target/wasm32-unknown-unknown/debug/build/markup5ever-cef8c331758ea392/out/generated.rs</h3>
+            
+                <section class="entry" id="macro_rules!-crates_web-core_target_wasm32-unknown-unknown_debug_build_markup5ever-cef8c331758ea392_out_generated_rs">
+                    <div class="entry-header">
+                        <span class="type">variable</span>
+                        <h2 class="name">macro_rules!</h2>
+                    </div>
+                    
+                    
+
+                    <div class="description">Maps the input of [<code>namespace_prefix!</code>](macro.namespace_prefix.html) to<br>the output of [<code>namespace_url!</code>](macro.namespace_url.html).</div>
+                    
+                    
+
+                    
+
+                    
+                    
+                    <div class="footer">
+                        <a href="file://crates/web-core/target/wasm32-unknown-unknown/debug/build/markup5ever-cef8c331758ea392/out/generated.rs" target="_blank">crates/web-core/target/wasm32-unknown-unknown/debug/build/markup5ever-cef8c331758ea392/out/generated.rs:2847</a>
+                    </div>
+                </section>
+            
+        </div>
+    
+        <div class="file-group">
+            <h3 class="file-path">crates/web-core/target/wasm32-unknown-unknown/debug/build/markup5ever-f30fb9bb29d97dd7/out/generated.rs</h3>
+            
+                <section class="entry" id="macro_rules!-crates_web-core_target_wasm32-unknown-unknown_debug_build_markup5ever-f30fb9bb29d97dd7_out_generated_rs">
+                    <div class="entry-header">
+                        <span class="type">variable</span>
+                        <h2 class="name">macro_rules!</h2>
+                    </div>
+                    
+                    
+
+                    <div class="description">Maps the input of [<code>namespace_prefix!</code>](macro.namespace_prefix.html) to<br>the output of [<code>namespace_url!</code>](macro.namespace_url.html).</div>
+                    
+                    
+
+                    
+
+                    
+                    
+                    <div class="footer">
+                        <a href="file://crates/web-core/target/wasm32-unknown-unknown/debug/build/markup5ever-f30fb9bb29d97dd7/out/generated.rs" target="_blank">crates/web-core/target/wasm32-unknown-unknown/debug/build/markup5ever-f30fb9bb29d97dd7/out/generated.rs:2847</a>
+                    </div>
+                </section>
+            
+        </div>
+    
+        <div class="file-group">
+            <h3 class="file-path">crates/web-core/target/wasm32-unknown-unknown/debug/build/markup5ever-f664ab89b244c60e/out/generated.rs</h3>
+            
+                <section class="entry" id="LocalNameStaticSet-crates_web-core_target_wasm32-unknown-unknown_debug_build_markup5ever-f664ab89b244c60e_out_generated_rs">
+                    <div class="entry-header">
+                        <span class="type">struct</span>
+                        <h2 class="name">LocalNameStaticSet</h2>
+                    </div>
+                    
+                    
+                        <div class="warnings">
+                            <strong>Documentation Gaps:</strong>
+                            <ul>
+                                <li>Missing description</li>
+                            </ul>
+                        </div>
+                    
+
+                    <div class="description"><em>No description provided.</em></div>
+                    
+                    
+
+                    
+
+                    
+                    
+                    <div class="footer">
+                        <a href="file://crates/web-core/target/wasm32-unknown-unknown/debug/build/markup5ever-f664ab89b244c60e/out/generated.rs" target="_blank">crates/web-core/target/wasm32-unknown-unknown/debug/build/markup5ever-f664ab89b244c60e/out/generated.rs:2</a>
+                    </div>
+                </section>
+            
+                <section class="entry" id="macro_rules!-crates_web-core_target_wasm32-unknown-unknown_debug_build_markup5ever-f664ab89b244c60e_out_generated_rs">
+                    <div class="entry-header">
+                        <span class="type">variable</span>
+                        <h2 class="name">macro_rules!</h2>
+                    </div>
+                    
+                    
+
+                    <div class="description">Maps the input of <code>namespace_prefix!</code> to the output of <code>namespace_url!</code>.</div>
+                    
+                    
+
+                    
+
+                    
+                    
+                    <div class="footer">
+                        <a href="file://crates/web-core/target/wasm32-unknown-unknown/debug/build/markup5ever-f664ab89b244c60e/out/generated.rs" target="_blank">crates/web-core/target/wasm32-unknown-unknown/debug/build/markup5ever-f664ab89b244c60e/out/generated.rs:2241</a>
+                    </div>
+                </section>
+            
+                <section class="entry" id="NamespaceStaticSet-crates_web-core_target_wasm32-unknown-unknown_debug_build_markup5ever-f664ab89b244c60e_out_generated_rs">
+                    <div class="entry-header">
+                        <span class="type">struct</span>
+                        <h2 class="name">NamespaceStaticSet</h2>
+                    </div>
+                    
+                    
+                        <div class="warnings">
+                            <strong>Documentation Gaps:</strong>
+                            <ul>
+                                <li>Missing description</li>
+                            </ul>
+                        </div>
+                    
+
+                    <div class="description"><em>No description provided.</em></div>
+                    
+                    
+
+                    
+
+                    
+                    
+                    <div class="footer">
+                        <a href="file://crates/web-core/target/wasm32-unknown-unknown/debug/build/markup5ever-f664ab89b244c60e/out/generated.rs" target="_blank">crates/web-core/target/wasm32-unknown-unknown/debug/build/markup5ever-f664ab89b244c60e/out/generated.rs:2222</a>
+                    </div>
+                </section>
+            
+                <section class="entry" id="PrefixStaticSet-crates_web-core_target_wasm32-unknown-unknown_debug_build_markup5ever-f664ab89b244c60e_out_generated_rs">
+                    <div class="entry-header">
+                        <span class="type">struct</span>
+                        <h2 class="name">PrefixStaticSet</h2>
+                    </div>
+                    
+                    
+                        <div class="warnings">
+                            <strong>Documentation Gaps:</strong>
+                            <ul>
+                                <li>Missing description</li>
+                            </ul>
+                        </div>
+                    
+
+                    <div class="description"><em>No description provided.</em></div>
+                    
+                    
+
+                    
+
+                    
+                    
+                    <div class="footer">
+                        <a href="file://crates/web-core/target/wasm32-unknown-unknown/debug/build/markup5ever-f664ab89b244c60e/out/generated.rs" target="_blank">crates/web-core/target/wasm32-unknown-unknown/debug/build/markup5ever-f664ab89b244c60e/out/generated.rs:2204</a>
+                    </div>
+                </section>
+            
+        </div>
+    
+        <div class="file-group">
+            <h3 class="file-path">crates/web-core/target/wasm32-unknown-unknown/debug/build/string_cache-985ae25072a03424/out/test_atom.rs</h3>
+            
+                <section class="entry" id="TestAtomStaticSet-crates_web-core_target_wasm32-unknown-unknown_debug_build_string_cache-985ae25072a03424_out_test_atom_rs">
+                    <div class="entry-header">
+                        <span class="type">struct</span>
+                        <h2 class="name">TestAtomStaticSet</h2>
+                    </div>
+                    
+                    
+                        <div class="warnings">
+                            <strong>Documentation Gaps:</strong>
+                            <ul>
+                                <li>Missing description</li>
+                            </ul>
+                        </div>
+                    
+
+                    <div class="description"><em>No description provided.</em></div>
+                    
+                    
+
+                    
+
+                    
+                    
+                    <div class="footer">
+                        <a href="file://crates/web-core/target/wasm32-unknown-unknown/debug/build/string_cache-985ae25072a03424/out/test_atom.rs" target="_blank">crates/web-core/target/wasm32-unknown-unknown/debug/build/string_cache-985ae25072a03424/out/test_atom.rs:2</a>
+                    </div>
+                </section>
+            
+        </div>
+    
+        <div class="file-group">
+            <h3 class="file-path">crates/web-core/target/wasm32-unknown-unknown/release/build/markup5ever-0d37cb10e8dfc31f/out/generated.rs</h3>
+            
+                <section class="entry" id="macro_rules!-crates_web-core_target_wasm32-unknown-unknown_release_build_markup5ever-0d37cb10e8dfc31f_out_generated_rs">
+                    <div class="entry-header">
+                        <span class="type">variable</span>
+                        <h2 class="name">macro_rules!</h2>
+                    </div>
+                    
+                    
+
+                    <div class="description">Maps the input of [<code>namespace_prefix!</code>](macro.namespace_prefix.html) to<br>the output of [<code>namespace_url!</code>](macro.namespace_url.html).</div>
+                    
+                    
+
+                    
+
+                    
+                    
+                    <div class="footer">
+                        <a href="file://crates/web-core/target/wasm32-unknown-unknown/release/build/markup5ever-0d37cb10e8dfc31f/out/generated.rs" target="_blank">crates/web-core/target/wasm32-unknown-unknown/release/build/markup5ever-0d37cb10e8dfc31f/out/generated.rs:2847</a>
+                    </div>
+                </section>
+            
+        </div>
+    
+        <div class="file-group">
+            <h3 class="file-path">crates/web-core/target/wasm32-unknown-unknown/release/build/markup5ever-2bc4231ac3beef47/out/generated.rs</h3>
+            
+                <section class="entry" id="macro_rules!-crates_web-core_target_wasm32-unknown-unknown_release_build_markup5ever-2bc4231ac3beef47_out_generated_rs">
+                    <div class="entry-header">
+                        <span class="type">variable</span>
+                        <h2 class="name">macro_rules!</h2>
+                    </div>
+                    
+                    
+
+                    <div class="description">Maps the input of [<code>namespace_prefix!</code>](macro.namespace_prefix.html) to<br>the output of [<code>namespace_url!</code>](macro.namespace_url.html).</div>
+                    
+                    
+
+                    
+
+                    
+                    
+                    <div class="footer">
+                        <a href="file://crates/web-core/target/wasm32-unknown-unknown/release/build/markup5ever-2bc4231ac3beef47/out/generated.rs" target="_blank">crates/web-core/target/wasm32-unknown-unknown/release/build/markup5ever-2bc4231ac3beef47/out/generated.rs:2847</a>
+                    </div>
+                </section>
+            
+        </div>
+    
+        <div class="file-group">
+            <h3 class="file-path">crates/web-core/target/wasm32-unknown-unknown/release/build/markup5ever-7b5eaa487749d834/out/generated.rs</h3>
+            
+                <section class="entry" id="macro_rules!-crates_web-core_target_wasm32-unknown-unknown_release_build_markup5ever-7b5eaa487749d834_out_generated_rs">
+                    <div class="entry-header">
+                        <span class="type">variable</span>
+                        <h2 class="name">macro_rules!</h2>
+                    </div>
+                    
+                    
+
+                    <div class="description">Maps the input of [<code>namespace_prefix!</code>](macro.namespace_prefix.html) to<br>the output of [<code>namespace_url!</code>](macro.namespace_url.html).</div>
+                    
+                    
+
+                    
+
+                    
+                    
+                    <div class="footer">
+                        <a href="file://crates/web-core/target/wasm32-unknown-unknown/release/build/markup5ever-7b5eaa487749d834/out/generated.rs" target="_blank">crates/web-core/target/wasm32-unknown-unknown/release/build/markup5ever-7b5eaa487749d834/out/generated.rs:2847</a>
+                    </div>
+                </section>
+            
+        </div>
+    
+        <div class="file-group">
+            <h3 class="file-path">crates/web-core/target/wasm32-unknown-unknown/release/build/markup5ever-9a83238e4010e823/out/generated.rs</h3>
+            
+                <section class="entry" id="macro_rules!-crates_web-core_target_wasm32-unknown-unknown_release_build_markup5ever-9a83238e4010e823_out_generated_rs">
+                    <div class="entry-header">
+                        <span class="type">variable</span>
+                        <h2 class="name">macro_rules!</h2>
+                    </div>
+                    
+                    
+
+                    <div class="description">Maps the input of [<code>namespace_prefix!</code>](macro.namespace_prefix.html) to<br>the output of [<code>namespace_url!</code>](macro.namespace_url.html).</div>
+                    
+                    
+
+                    
+
+                    
+                    
+                    <div class="footer">
+                        <a href="file://crates/web-core/target/wasm32-unknown-unknown/release/build/markup5ever-9a83238e4010e823/out/generated.rs" target="_blank">crates/web-core/target/wasm32-unknown-unknown/release/build/markup5ever-9a83238e4010e823/out/generated.rs:2847</a>
+                    </div>
+                </section>
+            
+        </div>
+    
+        <div class="file-group">
+            <h3 class="file-path">crates/web-core/target/wasm32-unknown-unknown/release/build/markup5ever-befa648f2ce3569a/out/generated.rs</h3>
+            
+                <section class="entry" id="macro_rules!-crates_web-core_target_wasm32-unknown-unknown_release_build_markup5ever-befa648f2ce3569a_out_generated_rs">
+                    <div class="entry-header">
+                        <span class="type">variable</span>
+                        <h2 class="name">macro_rules!</h2>
+                    </div>
+                    
+                    
+
+                    <div class="description">Maps the input of [<code>namespace_prefix!</code>](macro.namespace_prefix.html) to<br>the output of [<code>namespace_url!</code>](macro.namespace_url.html).</div>
+                    
+                    
+
+                    
+
+                    
+                    
+                    <div class="footer">
+                        <a href="file://crates/web-core/target/wasm32-unknown-unknown/release/build/markup5ever-befa648f2ce3569a/out/generated.rs" target="_blank">crates/web-core/target/wasm32-unknown-unknown/release/build/markup5ever-befa648f2ce3569a/out/generated.rs:2847</a>
+                    </div>
+                </section>
+            
+        </div>
+    
+        <div class="file-group">
+            <h3 class="file-path">crates/web-core/target/wasm32-unknown-unknown/release/build/markup5ever-cfc9320ddbc4c10b/out/generated.rs</h3>
+            
+                <section class="entry" id="LocalNameStaticSet-crates_web-core_target_wasm32-unknown-unknown_release_build_markup5ever-cfc9320ddbc4c10b_out_generated_rs">
+                    <div class="entry-header">
+                        <span class="type">struct</span>
+                        <h2 class="name">LocalNameStaticSet</h2>
+                    </div>
+                    
+                    
+                        <div class="warnings">
+                            <strong>Documentation Gaps:</strong>
+                            <ul>
+                                <li>Missing description</li>
+                            </ul>
+                        </div>
+                    
+
+                    <div class="description"><em>No description provided.</em></div>
+                    
+                    
+
+                    
+
+                    
+                    
+                    <div class="footer">
+                        <a href="file://crates/web-core/target/wasm32-unknown-unknown/release/build/markup5ever-cfc9320ddbc4c10b/out/generated.rs" target="_blank">crates/web-core/target/wasm32-unknown-unknown/release/build/markup5ever-cfc9320ddbc4c10b/out/generated.rs:2</a>
+                    </div>
+                </section>
+            
+                <section class="entry" id="macro_rules!-crates_web-core_target_wasm32-unknown-unknown_release_build_markup5ever-cfc9320ddbc4c10b_out_generated_rs">
+                    <div class="entry-header">
+                        <span class="type">variable</span>
+                        <h2 class="name">macro_rules!</h2>
+                    </div>
+                    
+                    
+
+                    <div class="description">Maps the input of <code>namespace_prefix!</code> to the output of <code>namespace_url!</code>.</div>
+                    
+                    
+
+                    
+
+                    
+                    
+                    <div class="footer">
+                        <a href="file://crates/web-core/target/wasm32-unknown-unknown/release/build/markup5ever-cfc9320ddbc4c10b/out/generated.rs" target="_blank">crates/web-core/target/wasm32-unknown-unknown/release/build/markup5ever-cfc9320ddbc4c10b/out/generated.rs:2241</a>
+                    </div>
+                </section>
+            
+                <section class="entry" id="NamespaceStaticSet-crates_web-core_target_wasm32-unknown-unknown_release_build_markup5ever-cfc9320ddbc4c10b_out_generated_rs">
+                    <div class="entry-header">
+                        <span class="type">struct</span>
+                        <h2 class="name">NamespaceStaticSet</h2>
+                    </div>
+                    
+                    
+                        <div class="warnings">
+                            <strong>Documentation Gaps:</strong>
+                            <ul>
+                                <li>Missing description</li>
+                            </ul>
+                        </div>
+                    
+
+                    <div class="description"><em>No description provided.</em></div>
+                    
+                    
+
+                    
+
+                    
+                    
+                    <div class="footer">
+                        <a href="file://crates/web-core/target/wasm32-unknown-unknown/release/build/markup5ever-cfc9320ddbc4c10b/out/generated.rs" target="_blank">crates/web-core/target/wasm32-unknown-unknown/release/build/markup5ever-cfc9320ddbc4c10b/out/generated.rs:2222</a>
+                    </div>
+                </section>
+            
+                <section class="entry" id="PrefixStaticSet-crates_web-core_target_wasm32-unknown-unknown_release_build_markup5ever-cfc9320ddbc4c10b_out_generated_rs">
+                    <div class="entry-header">
+                        <span class="type">struct</span>
+                        <h2 class="name">PrefixStaticSet</h2>
+                    </div>
+                    
+                    
+                        <div class="warnings">
+                            <strong>Documentation Gaps:</strong>
+                            <ul>
+                                <li>Missing description</li>
+                            </ul>
+                        </div>
+                    
+
+                    <div class="description"><em>No description provided.</em></div>
+                    
+                    
+
+                    
+
+                    
+                    
+                    <div class="footer">
+                        <a href="file://crates/web-core/target/wasm32-unknown-unknown/release/build/markup5ever-cfc9320ddbc4c10b/out/generated.rs" target="_blank">crates/web-core/target/wasm32-unknown-unknown/release/build/markup5ever-cfc9320ddbc4c10b/out/generated.rs:2204</a>
+                    </div>
+                </section>
+            
+        </div>
+    
+        <div class="file-group">
+            <h3 class="file-path">crates/web-core/target/wasm32-unknown-unknown/release/build/string_cache-c2e9867fc4caee97/out/test_atom.rs</h3>
+            
+                <section class="entry" id="TestAtomStaticSet-crates_web-core_target_wasm32-unknown-unknown_release_build_string_cache-c2e9867fc4caee97_out_test_atom_rs">
+                    <div class="entry-header">
+                        <span class="type">struct</span>
+                        <h2 class="name">TestAtomStaticSet</h2>
+                    </div>
+                    
+                    
+                        <div class="warnings">
+                            <strong>Documentation Gaps:</strong>
+                            <ul>
+                                <li>Missing description</li>
+                            </ul>
+                        </div>
+                    
+
+                    <div class="description"><em>No description provided.</em></div>
+                    
+                    
+
+                    
+
+                    
+                    
+                    <div class="footer">
+                        <a href="file://crates/web-core/target/wasm32-unknown-unknown/release/build/string_cache-c2e9867fc4caee97/out/test_atom.rs" target="_blank">crates/web-core/target/wasm32-unknown-unknown/release/build/string_cache-c2e9867fc4caee97/out/test_atom.rs:2</a>
+                    </div>
+                </section>
+            
+        </div>
+    
+        <div class="file-group">
+            <h3 class="file-path">crates/web-utils/src/lib.rs</h3>
+            
+                <section class="entry" id="add-crates_web-utils_src_lib_rs">
+                    <div class="entry-header">
+                        <span class="type">function</span>
+                        <h2 class="name">add</h2>
+                    </div>
+                    
+                    
+                        <div class="warnings">
+                            <strong>Documentation Gaps:</strong>
+                            <ul>
+                                <li>Missing description</li><li>Missing @param documentation for: a</li><li>Missing @param documentation for: b</li><li>Function returns a value but missing @returns documentation</li>
+                            </ul>
+                        </div>
+                    
+
+                    <div class="description"><em>No description provided.</em></div>
+                    
+                    
+
+                    
+
+                    
+                    
+                    <div class="footer">
+                        <a href="file://crates/web-utils/src/lib.rs" target="_blank">crates/web-utils/src/lib.rs:9</a>
+                    </div>
+                </section>
+            
+                <section class="entry" id="reverse_string-crates_web-utils_src_lib_rs">
+                    <div class="entry-header">
+                        <span class="type">function</span>
+                        <h2 class="name">reverse_string</h2>
+                    </div>
+                    
+                    
+                        <div class="warnings">
+                            <strong>Documentation Gaps:</strong>
+                            <ul>
+                                <li>Missing description</li><li>Missing @param documentation for: s</li>
+                            </ul>
+                        </div>
+                    
+
+                    <div class="description"><em>No description provided.</em></div>
+                    
+                    
+
+                    
+
+                    
+                    
+                    <div class="footer">
+                        <a href="file://crates/web-utils/src/lib.rs" target="_blank">crates/web-utils/src/lib.rs:4</a>
+                    </div>
+                </section>
+            
+        </div>
+    
+        <div class="file-group">
+            <h3 class="file-path">src/app/app.ts</h3>
+            
+                <section class="entry" id="AppElement-src_app_app_ts">
+                    <div class="entry-header">
+                        <span class="type">class</span>
+                        <h2 class="name">AppElement</h2>
+                    </div>
+                    
+                    
+                        <div class="warnings">
+                            <strong>Documentation Gaps:</strong>
+                            <ul>
+                                <li>Missing description</li>
+                            </ul>
+                        </div>
+                    
+
+                    <div class="description"><em>No description provided.</em></div>
+                    
+                    
+
+                    
+
+                    
+                    
+                    <div class="footer">
+                        <a href="file://src/app/app.ts" target="_blank">src/app/app.ts:5</a>
+                    </div>
+                </section>
+            
+        </div>
+    
+        <div class="file-group">
+            <h3 class="file-path">src/framework/baex-element.ts</h3>
+            
+                <section class="entry" id="currentRenderingComponentId-src_framework_baex-element_ts">
+                    <div class="entry-header">
+                        <span class="type">variable</span>
+                        <h2 class="name">currentRenderingComponentId</h2>
+                    </div>
+                    
+                    
+
+                    <div class="description">racks the ID of the component currently being rendered.<br>sed by <code>useSignal</code> and other hooks to scope reactivity.<br>*</div>
+                    
+                    
+
+                    
+
+                    
+                    
+                    <div class="footer">
+                        <a href="file://src/framework/baex-element.ts" target="_blank">src/framework/baex-element.ts:86</a>
+                    </div>
+                </section>
+            
+                <section class="entry" id="export-src_framework_baex-element_ts">
+                    <div class="entry-header">
+                        <span class="type">variable</span>
+                        <h2 class="name">export</h2>
+                    </div>
+                    
+                    
+                        <div class="warnings">
+                            <strong>Documentation Gaps:</strong>
+                            <ul>
+                                <li>Missing description</li>
+                            </ul>
+                        </div>
+                    
+
+                    <div class="description"><em>No description provided.</em></div>
+                    
+                    
+
+                    
+
+                    
+                    
+                    <div class="footer">
+                        <a href="file://src/framework/baex-element.ts" target="_blank">src/framework/baex-element.ts:43</a>
+                    </div>
+                </section>
+            
+                <section class="entry" id="export-src_framework_baex-element_ts">
+                    <div class="entry-header">
+                        <span class="type">variable</span>
+                        <h2 class="name">export</h2>
+                    </div>
+                    
+                    
+                        <div class="warnings">
+                            <strong>Documentation Gaps:</strong>
+                            <ul>
+                                <li>Missing description</li>
+                            </ul>
+                        </div>
+                    
+
+                    <div class="description"><em>No description provided.</em></div>
+                    
+                    
+
+                    
+
+                    
+                    
+                    <div class="footer">
+                        <a href="file://src/framework/baex-element.ts" target="_blank">src/framework/baex-element.ts:68</a>
+                    </div>
+                </section>
+            
+                <section class="entry" id="property-src_framework_baex-element_ts">
+                    <div class="entry-header">
+                        <span class="type">function</span>
+                        <h2 class="name">property</h2>
+                    </div>
+                    
+                    
+                        <div class="warnings">
+                            <strong>Documentation Gaps:</strong>
+                            <ul>
+                                <li>Missing @param documentation for: decl?</li>
+                            </ul>
+                        </div>
+                    
+
+                    <div class="description">ecorator used to define a reactive property on a BaexElement.<br>roperties can be mapped to DOM attributes for two-way binding.<br>*</div>
+                    
+                    
+
+                    
+
+                    
+                    
+                    <div class="footer">
+                        <a href="file://src/framework/baex-element.ts" target="_blank">src/framework/baex-element.ts:518</a>
+                    </div>
+                </section>
+            
+                <section class="entry" id="protected-src_framework_baex-element_ts">
+                    <div class="entry-header">
+                        <span class="type">variable</span>
+                        <h2 class="name">protected</h2>
+                    </div>
+                    
+                    
+
+                    <div class="description">efines the component's template. Must be implemented by all subclasses.<br>throws Error if not implemented.<br>*/</div>
+                    
+                    
+
+                    
+                        <div class="returns">
+                            <h3>Returns</h3>
+                            <p><strong></strong> A template string or a <code>TemplateResult</code> (for optimized patching).</p>
+                        </div>
+                    
+
+                    
+                    
+                    <div class="footer">
+                        <a href="file://src/framework/baex-element.ts" target="_blank">src/framework/baex-element.ts:215</a>
+                    </div>
+                </section>
+            
+                <section class="entry" id="protected-src_framework_baex-element_ts">
+                    <div class="entry-header">
+                        <span class="type">variable</span>
+                        <h2 class="name">protected</h2>
+                    </div>
+                    
+                    
+
+                    <div class="description">/** Lifecycle hook: Called when the component is added to the DOM. */</div>
+                    
+                    
+
+                    
+
+                    
+                    
+                    <div class="footer">
+                        <a href="file://src/framework/baex-element.ts" target="_blank">src/framework/baex-element.ts:220</a>
+                    </div>
+                </section>
+            
+                <section class="entry" id="protected-src_framework_baex-element_ts">
+                    <div class="entry-header">
+                        <span class="type">variable</span>
+                        <h2 class="name">protected</h2>
+                    </div>
+                    
+                    
+
+                    <div class="description">/** Lifecycle hook: Called when the component is removed from the DOM. */</div>
+                    
+                    
+
+                    
+
+                    
+                    
+                    <div class="footer">
+                        <a href="file://src/framework/baex-element.ts" target="_blank">src/framework/baex-element.ts:222</a>
+                    </div>
+                </section>
+            
+                <section class="entry" id="protected-src_framework_baex-element_ts">
+                    <div class="entry-header">
+                        <span class="type">variable</span>
+                        <h2 class="name">protected</h2>
+                    </div>
+                    
+                    
+
+                    <div class="description">/** Lifecycle hook: Called after an update, providing the set of changed properties. */</div>
+                    
+                    
+
+                    
+
+                    
+                    
+                    <div class="footer">
+                        <a href="file://src/framework/baex-element.ts" target="_blank">src/framework/baex-element.ts:224</a>
+                    </div>
+                </section>
+            
+                <section class="entry" id="protected-src_framework_baex-element_ts">
+                    <div class="entry-header">
+                        <span class="type">variable</span>
+                        <h2 class="name">protected</h2>
+                    </div>
+                    
+                    
+
+                    <div class="description">/** Lifecycle hook: Called immediately before the first render. */</div>
+                    
+                    
+
+                    
+
+                    
+                    
+                    <div class="footer">
+                        <a href="file://src/framework/baex-element.ts" target="_blank">src/framework/baex-element.ts:226</a>
+                    </div>
+                </section>
+            
+                <section class="entry" id="protected-src_framework_baex-element_ts">
+                    <div class="entry-header">
+                        <span class="type">variable</span>
+                        <h2 class="name">protected</h2>
+                    </div>
+                    
+                    
+
+                    <div class="description">/** Lifecycle hook: Called after every successful update (initial or patch). */</div>
+                    
+                    
+
+                    
+
+                    
+                    
+                    <div class="footer">
+                        <a href="file://src/framework/baex-element.ts" target="_blank">src/framework/baex-element.ts:228</a>
+                    </div>
+                </section>
+            
+                <section class="entry" id="protected-src_framework_baex-element_ts">
+                    <div class="entry-header">
+                        <span class="type">variable</span>
+                        <h2 class="name">protected</h2>
+                    </div>
+                    
+                    
+
+                    <div class="description">/** Lifecycle hook: Called immediately before the component is destroyed. */</div>
+                    
+                    
+
+                    
+
+                    
+                    
+                    <div class="footer">
+                        <a href="file://src/framework/baex-element.ts" target="_blank">src/framework/baex-element.ts:230</a>
+                    </div>
+                </section>
+            
+                <section class="entry" id="requestUpdate-src_framework_baex-element_ts">
+                    <div class="entry-header">
+                        <span class="type">variable</span>
+                        <h2 class="name">requestUpdate</h2>
+                    </div>
+                    
+                    
+
+                    <div class="description">chedules a re-render of the component.<br>pdates are batched using <code>queueMicrotask</code> to avoid multiple renders in a single sync block.<br>param force If true, forces a full re-render regardless of property changes.<br>*/</div>
+                    
+                    
+
+                    
+
+                    
+                    
+                    <div class="footer">
+                        <a href="file://src/framework/baex-element.ts" target="_blank">src/framework/baex-element.ts:184</a>
+                    </div>
+                </section>
+            
+                <section class="entry" id="state-src_framework_baex-element_ts">
+                    <div class="entry-header">
+                        <span class="type">function</span>
+                        <h2 class="name">state</h2>
+                    </div>
+                    
+                    
+                        <div class="warnings">
+                            <strong>Documentation Gaps:</strong>
+                            <ul>
+                                <li>Missing @param documentation for: decl?</li><li>Function returns a value but missing @returns documentation</li>
+                            </ul>
+                        </div>
+                    
+
+                    <div class="description">ecorator used to define a reactive internal state property on a BaexElement.<br>tate properties do not reflect to DOM attributes by default.<br>*</div>
+                    
+                    
+
+                    
+
+                    
+                    
+                    <div class="footer">
+                        <a href="file://src/framework/baex-element.ts" target="_blank">src/framework/baex-element.ts:535</a>
+                    </div>
+                </section>
+            
+                <section class="entry" id="to-src_framework_baex-element_ts">
+                    <div class="entry-header">
+                        <span class="type">function</span>
+                        <h2 class="name">to</h2>
+                    </div>
+                    
+                    
+                        <div class="warnings">
+                            <strong>Documentation Gaps:</strong>
+                            <ul>
+                                <li>Missing @param documentation for: value</li><li>Missing @param documentation for: oldValue</li><li>Function returns a value but missing @returns documentation</li>
+                            </ul>
+                        </div>
+                    
+
+                    <div class="description">onfiguration for a reactive property.<br>*</div>
+                    
+                    
+
+                    
+
+                    
+                    
+                    <div class="footer">
+                        <a href="file://src/framework/baex-element.ts" target="_blank">src/framework/baex-element.ts:22</a>
+                    </div>
+                </section>
+            
+                <section class="entry" id="unsub-src_framework_baex-element_ts">
+                    <div class="entry-header">
+                        <span class="type">variable</span>
+                        <h2 class="name">unsub</h2>
+                    </div>
+                    
+                    
+
+                    <div class="description">ubscribes the component to a signal.<br>he component will re-render whenever the signal value changes.<br>param signal The signal to track.<br>param callback The callback to execute on change (usually just calls <code>requestUpdate</code>).<br>*/</div>
+                    
+                    
+
+                    
+
+                    
+                    
+                    <div class="footer">
+                        <a href="file://src/framework/baex-element.ts" target="_blank">src/framework/baex-element.ts:201</a>
+                    </div>
+                </section>
+            
+                <section class="entry" id="whenUpdate-src_framework_baex-element_ts">
+                    <div class="entry-header">
+                        <span class="type">variable</span>
+                        <h2 class="name">whenUpdate</h2>
+                    </div>
+                    
+                    
+
+                    <div class="description">chedules a callback to be executed after the next update cycle.<br>param cb The callback to execute.<br>*/</div>
+                    
+                    
+
+                    
+
+                    
+                    
+                    <div class="footer">
+                        <a href="file://src/framework/baex-element.ts" target="_blank">src/framework/baex-element.ts:505</a>
+                    </div>
+                </section>
+            
+        </div>
+    
+        <div class="file-group">
+            <h3 class="file-path">src/framework/highlighter.ts</h3>
+            
+                <section class="entry" id="getHighlighter-src_framework_highlighter_ts">
+                    <div class="entry-header">
+                        <span class="type">function</span>
+                        <h2 class="name">getHighlighter</h2>
+                    </div>
+                    
+                    
+                        <div class="warnings">
+                            <strong>Documentation Gaps:</strong>
+                            <ul>
+                                <li>Missing description</li>
+                            </ul>
+                        </div>
+                    
+
+                    <div class="description"><em>No description provided.</em></div>
+                    
+                    
+
+                    
+
+                    
+                    
+                    <div class="footer">
+                        <a href="file://src/framework/highlighter.ts" target="_blank">src/framework/highlighter.ts:5</a>
+                    </div>
+                </section>
+            
+                <section class="entry" id="highlightCode-src_framework_highlighter_ts">
+                    <div class="entry-header">
+                        <span class="type">function</span>
+                        <h2 class="name">highlightCode</h2>
+                    </div>
+                    
+                    
+                        <div class="warnings">
+                            <strong>Documentation Gaps:</strong>
+                            <ul>
+                                <li>Missing description</li><li>Missing @param documentation for: code</li><li>Missing @param documentation for: lang</li>
+                            </ul>
+                        </div>
+                    
+
+                    <div class="description"><em>No description provided.</em></div>
+                    
+                    
+
+                    
+
+                    
+                    
+                    <div class="footer">
+                        <a href="file://src/framework/highlighter.ts" target="_blank">src/framework/highlighter.ts:15</a>
+                    </div>
+                </section>
+            
+        </div>
+    
+        <div class="file-group">
+            <h3 class="file-path">src/framework/index.ts</h3>
+            
+                <section class="entry" id="defineComponent-src_framework_index_ts">
+                    <div class="entry-header">
+                        <span class="type">function</span>
+                        <h2 class="name">defineComponent</h2>
+                    </div>
+                    
+                    
+                        <div class="warnings">
+                            <strong>Documentation Gaps:</strong>
+                            <ul>
+                                <li>Missing description</li><li>Missing @param documentation for: tagName</li><li>Missing @param documentation for: elementClass</li>
+                            </ul>
+                        </div>
+                    
+
+                    <div class="description"><em>No description provided.</em></div>
+                    
+                    
+
+                    
+
+                    
+                    
+                    <div class="footer">
+                        <a href="file://src/framework/index.ts" target="_blank">src/framework/index.ts:8</a>
+                    </div>
+                </section>
+            
+        </div>
+    
+        <div class="file-group">
+            <h3 class="file-path">src/framework/ir.ts</h3>
+            
+                <section class="entry" id="BindingSchema-src_framework_ir_ts">
+                    <div class="entry-header">
+                        <span class="type">variable</span>
+                        <h2 class="name">BindingSchema</h2>
+                    </div>
+                    
+                    
+
+                    <div class="description">chema for a binding that maps a DOM marker to a reactive value.<br>*</div>
+                    
+                    
+
+                    
+
+                    
+                    
+                    <div class="footer">
+                        <a href="file://src/framework/ir.ts" target="_blank">src/framework/ir.ts:51</a>
+                    </div>
+                </section>
+            
+                <section class="entry" id="BlueprintNodeSchema-src_framework_ir_ts">
+                    <div class="entry-header">
+                        <span class="type">variable</span>
+                        <h2 class="name">BlueprintNodeSchema</h2>
+                    </div>
+                    
+                    
+
+                    <div class="description">chema for a single node in the Blueprint tree.<br>escribes the structure of an element or text node and its attributes.<br>*</div>
+                    
+                    
+
+                    
+
+                    
+                    
+                    <div class="footer">
+                        <a href="file://src/framework/ir.ts" target="_blank">src/framework/ir.ts:10</a>
+                    </div>
+                </section>
+            
+                <section class="entry" id="BlueprintSchema-src_framework_ir_ts">
+                    <div class="entry-header">
+                        <span class="type">variable</span>
+                        <h2 class="name">BlueprintSchema</h2>
+                    </div>
+                    
+                    
+
+                    <div class="description">chema for the overall Blueprint of a template.<br>*</div>
+                    
+                    
+
+                    
+
+                    
+                    
+                    <div class="footer">
+                        <a href="file://src/framework/ir.ts" target="_blank">src/framework/ir.ts:33</a>
+                    </div>
+                </section>
+            
+                <section class="entry" id="export-src_framework_ir_ts">
+                    <div class="entry-header">
+                        <span class="type">variable</span>
+                        <h2 class="name">export</h2>
+                    </div>
+                    
+                    
+
+                    <div class="description">structural representation of a DOM node within the Blueprint.<br>*</div>
+                    
+                    
+
+                    
+
+                    
+                    
+                    <div class="footer">
+                        <a href="file://src/framework/ir.ts" target="_blank">src/framework/ir.ts:28</a>
+                    </div>
+                </section>
+            
+                <section class="entry" id="export-src_framework_ir_ts">
+                    <div class="entry-header">
+                        <span class="type">variable</span>
+                        <h2 class="name">export</h2>
+                    </div>
+                    
+                    
+
+                    <div class="description">n immutable representation of the static template structure,<br>sed to optimize DOM patching.<br>*</div>
+                    
+                    
+
+                    
+
+                    
+                    
+                    <div class="footer">
+                        <a href="file://src/framework/ir.ts" target="_blank">src/framework/ir.ts:43</a>
+                    </div>
+                </section>
+            
+                <section class="entry" id="export-src_framework_ir_ts">
+                    <div class="entry-header">
+                        <span class="type">variable</span>
+                        <h2 class="name">export</h2>
+                    </div>
+                    
+                    
+
+                    <div class="description">efines how a specific part of the DOM should be reactively updated.<br>*</div>
+                    
+                    
+
+                    
+
+                    
+                    
+                    <div class="footer">
+                        <a href="file://src/framework/ir.ts" target="_blank">src/framework/ir.ts:66</a>
+                    </div>
+                </section>
+            
+                <section class="entry" id="export-src_framework_ir_ts">
+                    <div class="entry-header">
+                        <span class="type">variable</span>
+                        <h2 class="name">export</h2>
+                    </div>
+                    
+                    
+
+                    <div class="description">map of unique markers (e.g., 'b0') to their corresponding Binding definitions.<br>*</div>
+                    
+                    
+
+                    
+
+                    
+                    
+                    <div class="footer">
+                        <a href="file://src/framework/ir.ts" target="_blank">src/framework/ir.ts:71</a>
+                    </div>
+                </section>
+            
+                <section class="entry" id="export-src_framework_ir_ts">
+                    <div class="entry-header">
+                        <span class="type">variable</span>
+                        <h2 class="name">export</h2>
+                    </div>
+                    
+                    
+
+                    <div class="description">map providing fast access to DOM elements or text nodes using their markers.<br>*</div>
+                    
+                    
+
+                    
+
+                    
+                    
+                    <div class="footer">
+                        <a href="file://src/framework/ir.ts" target="_blank">src/framework/ir.ts:79</a>
+                    </div>
+                </section>
+            
+                <section class="entry" id="export-src_framework_ir_ts">
+                    <div class="entry-header">
+                        <span class="type">variable</span>
+                        <h2 class="name">export</h2>
+                    </div>
+                    
+                    
+
+                    <div class="description">ypes of DOM updates that can be performed.<br>*</div>
+                    
+                    
+
+                    
+
+                    
+                    
+                    <div class="footer">
+                        <a href="file://src/framework/ir.ts" target="_blank">src/framework/ir.ts:87</a>
+                    </div>
+                </section>
+            
+                <section class="entry" id="export-src_framework_ir_ts">
+                    <div class="entry-header">
+                        <span class="type">variable</span>
+                        <h2 class="name">export</h2>
+                    </div>
+                    
+                    
+
+                    <div class="description">granular update instruction to be applied to the DOM.<br>*</div>
+                    
+                    
+
+                    
+
+                    
+                    
+                    <div class="footer">
+                        <a href="file://src/framework/ir.ts" target="_blank">src/framework/ir.ts:92</a>
+                    </div>
+                </section>
+            
+                <section class="entry" id="export-src_framework_ir_ts">
+                    <div class="entry-header">
+                        <span class="type">variable</span>
+                        <h2 class="name">export</h2>
+                    </div>
+                    
+                    
+
+                    <div class="description">set of patches to be applied in a single update cycle.<br>*</div>
+                    
+                    
+
+                    
+
+                    
+                    
+                    <div class="footer">
+                        <a href="file://src/framework/ir.ts" target="_blank">src/framework/ir.ts:101</a>
+                    </div>
+                </section>
+            
+        </div>
+    
+        <div class="file-group">
+            <h3 class="file-path">src/framework/signals.ts</h3>
+            
+                <section class="entry" id="createSignal-src_framework_signals_ts">
+                    <div class="entry-header">
+                        <span class="type">function</span>
+                        <h2 class="name">createSignal</h2>
+                    </div>
+                    
+                    
+                        <div class="warnings">
+                            <strong>Documentation Gaps:</strong>
+                            <ul>
+                                <li>Missing @param documentation for: key</li><li>Missing @param documentation for: initial</li><li>Missing @param documentation for: cid</li>
+                            </ul>
+                        </div>
+                    
+
+                    <div class="description">actory function to create a new signal.<br>f a key is not provided, a unique auto-generated key is used.<br>f <code>cid</code> is <code>null</code>, the signal is stored globally.<br>param key Unique identifier for the signal.<br>param initial Initial value.<br>param cid Optional component ID for scoping.<br>returns A new Signal instance.<br>*</div>
+                    
+                    
+
+                    
+
+                    
+                    
+                    <div class="footer">
+                        <a href="file://src/framework/signals.ts" target="_blank">src/framework/signals.ts:295</a>
+                    </div>
+                </section>
+            
+                <section class="entry" id="destroy-src_framework_signals_ts">
+                    <div class="entry-header">
+                        <span class="type">variable</span>
+                        <h2 class="name">destroy</h2>
+                    </div>
+                    
+                    
+
+                    <div class="description">isposes of the computed signal and its internal effect.<br>*/</div>
+                    
+                    
+
+                    
+
+                    
+                    
+                    <div class="footer">
+                        <a href="file://src/framework/signals.ts" target="_blank">src/framework/signals.ts:163</a>
+                    </div>
+                </section>
+            
+                <section class="entry" id="get-src_framework_signals_ts">
+                    <div class="entry-header">
+                        <span class="type">variable</span>
+                        <h2 class="name">get</h2>
+                    </div>
+                    
+                    
+
+                    <div class="description">he current value of the computed signal. Accessing this property<br>egisters this computed signal as a dependency of the current active effect.<br>*/</div>
+                    
+                    
+
+                    
+
+                    
+                    
+                    <div class="footer">
+                        <a href="file://src/framework/signals.ts" target="_blank">src/framework/signals.ts:115</a>
+                    </div>
+                </section>
+            
+                <section class="entry" id="get-src_framework_signals_ts">
+                    <div class="entry-header">
+                        <span class="type">variable</span>
+                        <h2 class="name">get</h2>
+                    </div>
+                    
+                    
+
+                    <div class="description">he current value of the signal. Accessing this property<br>egisters this signal as a dependency of the current active effect.<br>*/</div>
+                    
+                    
+
+                    
+
+                    
+                    
+                    <div class="footer">
+                        <a href="file://src/framework/signals.ts" target="_blank">src/framework/signals.ts:222</a>
+                    </div>
+                </section>
+            
+                <section class="entry" id="get-src_framework_signals_ts">
+                    <div class="entry-header">
+                        <span class="type">variable</span>
+                        <h2 class="name">get</h2>
+                    </div>
+                    
+                    
+
+                    <div class="description">he unique key used to identify the signal in the global or component store.<br>*/</div>
+                    
+                    
+
+                    
+
+                    
+                    
+                    <div class="footer">
+                        <a href="file://src/framework/signals.ts" target="_blank">src/framework/signals.ts:276</a>
+                    </div>
+                </section>
+            
+                <section class="entry" id="getSignal-src_framework_signals_ts">
+                    <div class="entry-header">
+                        <span class="type">function</span>
+                        <h2 class="name">getSignal</h2>
+                    </div>
+                    
+                    
+                        <div class="warnings">
+                            <strong>Documentation Gaps:</strong>
+                            <ul>
+                                <li>Missing @param documentation for: key</li><li>Missing @param documentation for: cid</li>
+                            </ul>
+                        </div>
+                    
+
+                    <div class="description">etrieves an existing global signal by its key.<br>param key Unique identifier of the signal.<br>param cid Optional component ID. If provided, this function currently returns undefined.<br>returns The Signal instance if found, otherwise undefined.<br>*</div>
+                    
+                    
+
+                    
+
+                    
+                    
+                    <div class="footer">
+                        <a href="file://src/framework/signals.ts" target="_blank">src/framework/signals.ts:314</a>
+                    </div>
+                </section>
+            
+                <section class="entry" id="peek-src_framework_signals_ts">
+                    <div class="entry-header">
+                        <span class="type">variable</span>
+                        <h2 class="name">peek</h2>
+                    </div>
+                    
+                    
+
+                    <div class="description">etrieves the current value without registering a dependency.<br>*/</div>
+                    
+                    
+
+                    
+
+                    
+                    
+                    <div class="footer">
+                        <a href="file://src/framework/signals.ts" target="_blank">src/framework/signals.ts:134</a>
+                    </div>
+                </section>
+            
+                <section class="entry" id="peek-src_framework_signals_ts">
+                    <div class="entry-header">
+                        <span class="type">variable</span>
+                        <h2 class="name">peek</h2>
+                    </div>
+                    
+                    
+
+                    <div class="description">etrieves the current value without registering a dependency.<br>*/</div>
+                    
+                    
+
+                    
+
+                    
+                    
+                    <div class="footer">
+                        <a href="file://src/framework/signals.ts" target="_blank">src/framework/signals.ts:245</a>
+                    </div>
+                </section>
+            
+                <section class="entry" id="set-src_framework_signals_ts">
+                    <div class="entry-header">
+                        <span class="type">variable</span>
+                        <h2 class="name">set</h2>
+                    </div>
+                    
+                    
+
+                    <div class="description">pdates the signal value and triggers all dependent effects and subscribers.<br>*/</div>
+                    
+                    
+
+                    
+
+                    
+                    
+                    <div class="footer">
+                        <a href="file://src/framework/signals.ts" target="_blank">src/framework/signals.ts:230</a>
+                    </div>
+                </section>
+            
+                <section class="entry" id="setScheduler-src_framework_signals_ts">
+                    <div class="entry-header">
+                        <span class="type">function</span>
+                        <h2 class="name">setScheduler</h2>
+                    </div>
+                    
+                    
+                        <div class="warnings">
+                            <strong>Documentation Gaps:</strong>
+                            <ul>
+                                <li>Missing @param documentation for: s</li>
+                            </ul>
+                        </div>
+                    
+
+                    <div class="description">onfigures the scheduler used to trigger reactive effects.<br>y default, effects are scheduled as microtasks using <code>queueMicrotask</code>.<br>param s The scheduler function that accepts a task to be executed.<br>*</div>
+                    
+                    
+
+                    
+
+                    
+                    
+                    <div class="footer">
+                        <a href="file://src/framework/signals.ts" target="_blank">src/framework/signals.ts:45</a>
+                    </div>
+                </section>
+            
+                <section class="entry" id="subscribe-src_framework_signals_ts">
+                    <div class="entry-header">
+                        <span class="type">variable</span>
+                        <h2 class="name">subscribe</h2>
+                    </div>
+                    
+                    
+
+                    <div class="description">egisters a callback to be executed when the computed value changes.<br>param cb The callback function receiving the new value.<br>returns A function to unsubscribe from changes.<br>*/</div>
+                    
+                    
+
+                    
+
+                    
+                    
+                    <div class="footer">
+                        <a href="file://src/framework/signals.ts" target="_blank">src/framework/signals.ts:155</a>
+                    </div>
+                </section>
+            
+                <section class="entry" id="subscribed-src_framework_signals_ts">
+                    <div class="entry-header">
+                        <span class="type">variable</span>
+                        <h2 class="name">subscribed</h2>
+                    </div>
+                    
+                    
+
+                    <div class="description">egisters a callback to be executed whenever the signal value changes.<br>param cb The callback function receiving the new value.<br>returns A function to unsubscribe from changes.<br>*/</div>
+                    
+                    
+
+                    
+
+                    
+                    
+                    <div class="footer">
+                        <a href="file://src/framework/signals.ts" target="_blank">src/framework/signals.ts:255</a>
+                    </div>
+                </section>
+            
+                <section class="entry" id="useComputed-src_framework_signals_ts">
+                    <div class="entry-header">
+                        <span class="type">function</span>
+                        <h2 class="name">useComputed</h2>
+                    </div>
+                    
+                    
+                        <div class="warnings">
+                            <strong>Documentation Gaps:</strong>
+                            <ul>
+                                <li>Missing @param documentation for: fn</li>
+                            </ul>
+                        </div>
+                    
+
+                    <div class="description">ook to create a computed signal within the current component.<br>param fn Computation function that returns a derived value.<br>returns A Computed signal instance.<br>*</div>
+                    
+                    
+
+                    
+
+                    
+                    
+                    <div class="footer">
+                        <a href="file://src/framework/signals.ts" target="_blank">src/framework/signals.ts:342</a>
+                    </div>
+                </section>
+            
+                <section class="entry" id="useEffect-src_framework_signals_ts">
+                    <div class="entry-header">
+                        <span class="type">function</span>
+                        <h2 class="name">useEffect</h2>
+                    </div>
+                    
+                    
+                        <div class="warnings">
+                            <strong>Documentation Gaps:</strong>
+                            <ul>
+                                <li>Missing @param documentation for: fn</li><li>Missing @param documentation for: deps</li>
+                            </ul>
+                        </div>
+                    
+
+                    <div class="description">ook to create a reactive effect within the current component.<br>param fn The effect function.<br>param deps Optional dependency array (not currently implemented in this version).<br>returns A function to dispose of the effect.<br>*</div>
+                    
+                    
+
+                    
+
+                    
+                    
+                    <div class="footer">
+                        <a href="file://src/framework/signals.ts" target="_blank">src/framework/signals.ts:353</a>
+                    </div>
+                </section>
+            
+                <section class="entry" id="useSignal-src_framework_signals_ts">
+                    <div class="entry-header">
+                        <span class="type">function</span>
+                        <h2 class="name">useSignal</h2>
+                    </div>
+                    
+                    
+                        <div class="warnings">
+                            <strong>Documentation Gaps:</strong>
+                            <ul>
+                                <li>Missing @param documentation for: key</li><li>Missing @param documentation for: initial</li>
+                            </ul>
+                        </div>
+                    
+
+                    <div class="description">ook to create a signal scoped to the current rendering component.<br>param key Unique identifier for the signal.<br>param initial Initial value.<br>returns A scoped Signal instance.<br>*</div>
+                    
+                    
+
+                    
+
+                    
+                    
+                    <div class="footer">
+                        <a href="file://src/framework/signals.ts" target="_blank">src/framework/signals.ts:332</a>
+                    </div>
+                </section>
+            
+                <section class="entry" id="watch-src_framework_signals_ts">
+                    <div class="entry-header">
+                        <span class="type">function</span>
+                        <h2 class="name">watch</h2>
+                    </div>
+                    
+                    
+                        <div class="warnings">
+                            <strong>Documentation Gaps:</strong>
+                            <ul>
+                                <li>Missing @param documentation for: source</li>
+                            </ul>
+                        </div>
+                    
+
+                    <div class="description">atches a source function and executes a callback whenever the result changes.<br>param source A function that returns the value to watch.<br>param callback The callback to execute on change.<br>param options Configuration options (e.g., <code>immediate</code> to run immediately).<br>returns A function to stop watching.<br>*</div>
+                    
+                    
+
+                    
+
+                    
+                    
+                    <div class="footer">
+                        <a href="file://src/framework/signals.ts" target="_blank">src/framework/signals.ts:178</a>
+                    </div>
+                </section>
+            
+        </div>
+    
+        <div class="file-group">
+            <h3 class="file-path">src/framework/template.ts</h3>
+            
+                <section class="entry" id="css-src_framework_template_ts">
+                    <div class="entry-header">
+                        <span class="type">function</span>
+                        <h2 class="name">css</h2>
+                    </div>
+                    
+                    
+                        <div class="warnings">
+                            <strong>Documentation Gaps:</strong>
+                            <ul>
+                                <li>Missing @param documentation for: strings</li><li>Missing @param documentation for: ...values</li>
+                            </ul>
+                        </div>
+                    
+
+                    <div class="description">agged template function for generating CSS strings.<br>param strings The static parts of the CSS.<br>param values The dynamic values inserted into the CSS.<br>returns A combined CSS string.<br>*</div>
+                    
+                    
+
+                    
+
+                    
+                    
+                    <div class="footer">
+                        <a href="file://src/framework/template.ts" target="_blank">src/framework/template.ts:153</a>
+                    </div>
+                </section>
+            
+                <section class="entry" id="export-src_framework_template_ts">
+                    <div class="entry-header">
+                        <span class="type">variable</span>
+                        <h2 class="name">export</h2>
+                    </div>
+                    
+                    
+
+                    <div class="description">he result of processing an <code>html</code> tagged template.<br>*</div>
+                    
+                    
+
+                    
+
+                    
+                    
+                    <div class="footer">
+                        <a href="file://src/framework/template.ts" target="_blank">src/framework/template.ts:14</a>
+                    </div>
+                </section>
+            
+                <section class="entry" id="Raw-src_framework_template_ts">
+                    <div class="entry-header">
+                        <span class="type">variable</span>
+                        <h2 class="name">Raw</h2>
+                    </div>
+                    
+                    
+
+                    <div class="description">arks a string as raw HTML to prevent it from being escaped during processing.<br>param value The HTML string to treat as raw.<br>returns A raw HTML wrapper.<br>*</div>
+                    
+                    
+
+                    
+
+                    
+                    
+                    <div class="footer">
+                        <a href="file://src/framework/template.ts" target="_blank">src/framework/template.ts:29</a>
+                    </div>
+                </section>
+            
+                <section class="entry" id="when-src_framework_template_ts">
+                    <div class="entry-header">
+                        <span class="type">function</span>
+                        <h2 class="name">when</h2>
+                    </div>
+                    
+                    
+                        <div class="warnings">
+                            <strong>Documentation Gaps:</strong>
+                            <ul>
+                                <li>Missing @param documentation for: condition</li><li>Function returns a value but missing @returns documentation</li>
+                            </ul>
+                        </div>
+                    
+
+                    <div class="description">onditional rendering helper.<br>param condition A value or function that returns a boolean.<br>param thenResult The template to render if condition is truthy.<br>param elseResult The template to render if condition is falsy.<br>returns The selected template result.<br>*</div>
+                    
+                    
+
+                    
+
+                    
+                    
+                    <div class="footer">
+                        <a href="file://src/framework/template.ts" target="_blank">src/framework/template.ts:39</a>
+                    </div>
+                </section>
+            
+        </div>
+    
+        <div class="file-group">
+            <h3 class="file-path">src/utils/tabs-storage.ts</h3>
+            
+                <section class="entry" id="clearTabsState-src_utils_tabs-storage_ts">
+                    <div class="entry-header">
+                        <span class="type">function</span>
+                        <h2 class="name">clearTabsState</h2>
+                    </div>
+                    
+                    
+                        <div class="warnings">
+                            <strong>Documentation Gaps:</strong>
+                            <ul>
+                                <li>Missing description</li>
+                            </ul>
+                        </div>
+                    
+
+                    <div class="description"><em>No description provided.</em></div>
+                    
+                    
+
+                    
+
+                    
+                    
+                    <div class="footer">
+                        <a href="file://src/utils/tabs-storage.ts" target="_blank">src/utils/tabs-storage.ts:26</a>
+                    </div>
+                </section>
+            
+                <section class="entry" id="export-src_utils_tabs-storage_ts">
+                    <div class="entry-header">
+                        <span class="type">variable</span>
+                        <h2 class="name">export</h2>
+                    </div>
+                    
+                    
+                        <div class="warnings">
+                            <strong>Documentation Gaps:</strong>
+                            <ul>
+                                <li>Missing description</li>
+                            </ul>
+                        </div>
+                    
+
+                    <div class="description"><em>No description provided.</em></div>
+                    
+                    
+
+                    
+
+                    
+                    
+                    <div class="footer">
+                        <a href="file://src/utils/tabs-storage.ts" target="_blank">src/utils/tabs-storage.ts:3</a>
+                    </div>
+                </section>
+            
+                <section class="entry" id="loadTabsState-src_utils_tabs-storage_ts">
+                    <div class="entry-header">
+                        <span class="type">function</span>
+                        <h2 class="name">loadTabsState</h2>
+                    </div>
+                    
+                    
+                        <div class="warnings">
+                            <strong>Documentation Gaps:</strong>
+                            <ul>
+                                <li>Missing description</li>
+                            </ul>
+                        </div>
+                    
+
+                    <div class="description"><em>No description provided.</em></div>
+                    
+                    
+
+                    
+
+                    
+                    
+                    <div class="footer">
+                        <a href="file://src/utils/tabs-storage.ts" target="_blank">src/utils/tabs-storage.ts:16</a>
+                    </div>
+                </section>
+            
+                <section class="entry" id="saveTabsState-src_utils_tabs-storage_ts">
+                    <div class="entry-header">
+                        <span class="type">function</span>
+                        <h2 class="name">saveTabsState</h2>
+                    </div>
+                    
+                    
+                        <div class="warnings">
+                            <strong>Documentation Gaps:</strong>
+                            <ul>
+                                <li>Missing description</li><li>Missing @param documentation for: state</li>
+                            </ul>
+                        </div>
+                    
+
+                    <div class="description"><em>No description provided.</em></div>
+                    
+                    
+
+                    
+
+                    
+                    
+                    <div class="footer">
+                        <a href="file://src/utils/tabs-storage.ts" target="_blank">src/utils/tabs-storage.ts:8</a>
+                    </div>
+                </section>
+            
+        </div>
+    
+        <div class="file-group">
+            <h3 class="file-path">src/widgets/status-modal.ts</h3>
+            
+                <section class="entry" id="modalOpenSignal-src_widgets_status-modal_ts">
+                    <div class="entry-header">
+                        <span class="type">variable</span>
+                        <h2 class="name">modalOpenSignal</h2>
+                    </div>
+                    
+                    
+                        <div class="warnings">
+                            <strong>Documentation Gaps:</strong>
+                            <ul>
+                                <li>Missing description</li>
+                            </ul>
+                        </div>
+                    
+
+                    <div class="description"><em>No description provided.</em></div>
+                    
+                    
+
+                    
+
+                    
+                    
+                    <div class="footer">
+                        <a href="file://src/widgets/status-modal.ts" target="_blank">src/widgets/status-modal.ts:3</a>
+                    </div>
+                </section>
+            
+        </div>
+    
+        <div class="file-group">
+            <h3 class="file-path">src/widgets/tree-item.ts</h3>
+            
+                <section class="entry" id="export-src_widgets_tree-item_ts">
+                    <div class="entry-header">
+                        <span class="type">variable</span>
+                        <h2 class="name">export</h2>
+                    </div>
+                    
+                    
+                        <div class="warnings">
+                            <strong>Documentation Gaps:</strong>
+                            <ul>
+                                <li>Missing description</li>
+                            </ul>
+                        </div>
+                    
+
+                    <div class="description"><em>No description provided.</em></div>
+                    
+                    
+
+                    
+
+                    
+                    
+                    <div class="footer">
+                        <a href="file://src/widgets/tree-item.ts" target="_blank">src/widgets/tree-item.ts:4</a>
+                    </div>
+                </section>
+            
+        </div>
+    
+    </main>
+    <script>
+        document.addEventListener('DOMContentLoaded', (event) => {
+            hljs.highlightAll();
+        });
+    </script>
+</body>
+</html>
+    

@@ -2,7 +2,7 @@
 
 <!-- ![bee-holding-axe](./bee-holding-axe.jpg) -->
 
-<img src="./bee-holding-axe.jpg" width="30%" align="center">
+<div style="width: 100%; text-align: center;"><img src="./bee-holding-axe2.jpg" width="30%"></div>
 
 A high-performance web framework bridging Rust/WASM state management with a reactive TypeScript frontend.
 

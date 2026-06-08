@@ -1,0 +1,593 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API Documentation</title>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; line-height: 1.6; color: #333; max-width: 1000px; margin: 0 auto; padding: 2rem; background: #f9f9f9; }
+        nav { position: fixed; left: 2rem; top: 2rem; width: 250px; height: calc(100vh - 4rem); overflow-y: auto; background: white; padding: 1rem; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        nav h1 { font-size: 1.2rem; margin-bottom: 1rem; }
+        nav ul { list-style: none; padding: 0; }
+        nav li { margin-bottom: 0.5rem; }
+        nav a { text-decoration: none; color: #0066cc; font-size: 0.9rem; }
+        nav a:hover { text-decoration: underline; }
+        main { margin-left: 300px; }
+        .entry { background: white; padding: 1.5rem; margin-bottom: 2rem; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); border-left: 5px solid #0066cc; }
+        .entry-header { display: flex; align-items: baseline; gap: 1rem; margin-bottom: 1rem; }
+        .type { background: #eee; padding: 0.2rem 0.5rem; border-radius: 4px; font-size: 0.8rem; font-family: monospace; text-transform: uppercase; }
+        .name { margin: 0; font-size: 1.5rem; }
+        .description { margin-bottom: 1rem; }
+        .params, .returns, .examples { margin-top: 1rem; padding: 1rem; background: #f0f4f8; border-radius: 4px; }
+        .params h3, .returns h3, .examples h3 { margin-top: 0; font-size: 1rem; color: #555; }
+        .params ul { margin: 0; padding-left: 1.2rem; }
+        pre { background: #2d2d2d; color: #ccc; padding: 1rem; border-radius: 4px; overflow-x: auto; font-size: 0.9rem; }
+        .footer { margin-top: 1rem; font-size: 0.8rem; color: #888; text-align: right; }
+        .footer a { color: #888; text-decoration: none; }
+        .footer a:hover { color: #0066cc; }
+        @media (max-width: 800px) {
+            nav { position: relative; width: 100%; height: auto; margin-bottom: 2rem; }
+            main { margin-left: 0; }
+        }
+    </style>
+</head>
+<body>
+    <nav>
+        <h1>API Reference</h1>
+        <ul>
+            <li><a href="#"></a></li><li><a href="#initSync">initSync</a></li><li><a href="#__wbg_init">__wbg_init</a></li><li><a href="#deserialize_property">deserialize_property</a></li><li><a href="#reset_binding_counter">reset_binding_counter</a></li><li><a href="#serialize_property">serialize_property</a></li><li><a href="#initSync">initSync</a></li><li><a href="#__wbg_init">__wbg_init</a></li><li><a href="#deserialize_property">deserialize_property</a></li><li><a href="#reset_binding_counter">reset_binding_counter</a></li><li><a href="#serialize_property">serialize_property</a></li><li><a href="#initSync">initSync</a></li><li><a href="#__wbg_init">__wbg_init</a></li><li><a href="##[macro_export]">#[macro_export]</a></li><li><a href="#"></a></li><li><a href="##[macro_export]">#[macro_export]</a></li><li><a href="#"></a></li><li><a href="##[macro_export]">#[macro_export]</a></li><li><a href="#"></a></li><li><a href="##[macro_export]">#[macro_export]</a></li><li><a href="#"></a></li><li><a href="##[macro_export]">#[macro_export]</a></li><li><a href="#"></a></li><li><a href="##[macro_export]">#[macro_export]</a></li><li><a href="#"></a></li><li><a href="##[macro_export]">#[macro_export]</a></li><li><a href="#"></a></li><li><a href="##[macro_export]">#[macro_export]</a></li><li><a href="#"></a></li><li><a href="##[macro_export]">#[macro_export]</a></li><li><a href="#"></a></li><li><a href="##[macro_export]">#[macro_export]</a></li><li><a href="#"></a></li><li><a href="##[macro_export]">#[macro_export]</a></li><li><a href="#"></a></li><li><a href="##[macro_export]">#[macro_export]</a></li><li><a href="#"></a></li><li><a href="##[macro_export]">#[macro_export]</a></li><li><a href="#"></a></li>
+        </ul>
+    </nav>
+    <main>
+        
+        <section class="entry" id="">
+            <div class="entry-header">
+                <span class="type">variable</span>
+                <h2 class="name"></h2>
+            </div>
+            <div class="description"><reference types="@rsbuild/core/types" /></div>
+            
+            
+            
+            <div class="footer">
+                <a href="file://src/env.d.ts" target="_blank">src/env.d.ts:2</a>
+            </div>
+        </section>
+    
+        <section class="entry" id="initSync">
+            <div class="entry-header">
+                <span class="type">function</span>
+                <h2 class="name">initSync</h2>
+            </div>
+            <div class="description">nstantiates the given `module`, which can either be bytes or precompiled `WebAssembly.Module`.  param {{ module: SyncInitInput }} module - Passing `SyncInitInput` directly is deprecated.  returns {InitOutput} *</div>
+            
+            
+            
+            <div class="footer">
+                <a href="file://crates/web-core/pkg/baex_web_core.d.ts" target="_blank">crates/web-core/pkg/baex_web_core.d.ts:74</a>
+            </div>
+        </section>
+    
+        <section class="entry" id="__wbg_init">
+            <div class="entry-header">
+                <span class="type">function</span>
+                <h2 class="name">__wbg_init</h2>
+            </div>
+            <div class="description">f `module_or_path` is {RequestInfo} or {URL}, makes a request and or everything else, calls `WebAssembly.instantiate` directly.  param {{ module_or_path: InitInput | Promise<InitInput> }} module_or_path - Passing `InitInput` directly is deprecated.  returns {Promise<InitOutput>} *</div>
+            
+            
+            
+            <div class="footer">
+                <a href="file://crates/web-core/pkg/baex_web_core.d.ts" target="_blank">crates/web-core/pkg/baex_web_core.d.ts:84</a>
+            </div>
+        </section>
+    
+        <section class="entry" id="deserialize_property">
+            <div class="entry-header">
+                <span class="type">function</span>
+                <h2 class="name">deserialize_property</h2>
+            </div>
+            <div class="description">eserialize an attribute string to a property value *</div>
+            
+            
+            
+            <div class="footer">
+                <a href="file://crates/web-core/pkg/web_core.d.ts" target="_blank">crates/web-core/pkg/web_core.d.ts:11</a>
+            </div>
+        </section>
+    
+        <section class="entry" id="reset_binding_counter">
+            <div class="entry-header">
+                <span class="type">function</span>
+                <h2 class="name">reset_binding_counter</h2>
+            </div>
+            <div class="description">eset binding counter (useful for tests / HMR) *</div>
+            
+            
+            
+            <div class="footer">
+                <a href="file://crates/web-core/pkg/web_core.d.ts" target="_blank">crates/web-core/pkg/web_core.d.ts:32</a>
+            </div>
+        </section>
+    
+        <section class="entry" id="serialize_property">
+            <div class="entry-header">
+                <span class="type">function</span>
+                <h2 class="name">serialize_property</h2>
+            </div>
+            <div class="description">erialize a property value to an attribute string (or null to remove) *</div>
+            
+            
+            
+            <div class="footer">
+                <a href="file://crates/web-core/pkg/web_core.d.ts" target="_blank">crates/web-core/pkg/web_core.d.ts:39</a>
+            </div>
+        </section>
+    
+        <section class="entry" id="initSync">
+            <div class="entry-header">
+                <span class="type">function</span>
+                <h2 class="name">initSync</h2>
+            </div>
+            <div class="description">nstantiates the given `module`, which can either be bytes or precompiled `WebAssembly.Module`.  param {{ module: SyncInitInput }} module - Passing `SyncInitInput` directly is deprecated.  returns {InitOutput} *</div>
+            
+            
+            
+            <div class="footer">
+                <a href="file://crates/web-core/pkg/web_core.d.ts" target="_blank">crates/web-core/pkg/web_core.d.ts:83</a>
+            </div>
+        </section>
+    
+        <section class="entry" id="__wbg_init">
+            <div class="entry-header">
+                <span class="type">function</span>
+                <h2 class="name">__wbg_init</h2>
+            </div>
+            <div class="description">f `module_or_path` is {RequestInfo} or {URL}, makes a request and or everything else, calls `WebAssembly.instantiate` directly.  param {{ module_or_path: InitInput | Promise<InitInput> }} module_or_path - Passing `InitInput` directly is deprecated.  returns {Promise<InitOutput>} *</div>
+            
+            
+            
+            <div class="footer">
+                <a href="file://crates/web-core/pkg/web_core.d.ts" target="_blank">crates/web-core/pkg/web_core.d.ts:93</a>
+            </div>
+        </section>
+    
+        <section class="entry" id="deserialize_property">
+            <div class="entry-header">
+                <span class="type">function</span>
+                <h2 class="name">deserialize_property</h2>
+            </div>
+            <div class="description">eserialize an attribute string to a property value *</div>
+            
+            
+            
+            <div class="footer">
+                <a href="file://crates/web-core/pkgs/web-core/web_core.d.ts" target="_blank">crates/web-core/pkgs/web-core/web_core.d.ts:11</a>
+            </div>
+        </section>
+    
+        <section class="entry" id="reset_binding_counter">
+            <div class="entry-header">
+                <span class="type">function</span>
+                <h2 class="name">reset_binding_counter</h2>
+            </div>
+            <div class="description">eset binding counter (useful for tests / HMR) *</div>
+            
+            
+            
+            <div class="footer">
+                <a href="file://crates/web-core/pkgs/web-core/web_core.d.ts" target="_blank">crates/web-core/pkgs/web-core/web_core.d.ts:26</a>
+            </div>
+        </section>
+    
+        <section class="entry" id="serialize_property">
+            <div class="entry-header">
+                <span class="type">function</span>
+                <h2 class="name">serialize_property</h2>
+            </div>
+            <div class="description">erialize a property value to an attribute string (or null to remove) *</div>
+            
+            
+            
+            <div class="footer">
+                <a href="file://crates/web-core/pkgs/web-core/web_core.d.ts" target="_blank">crates/web-core/pkgs/web-core/web_core.d.ts:33</a>
+            </div>
+        </section>
+    
+        <section class="entry" id="initSync">
+            <div class="entry-header">
+                <span class="type">function</span>
+                <h2 class="name">initSync</h2>
+            </div>
+            <div class="description">nstantiates the given `module`, which can either be bytes or precompiled `WebAssembly.Module`.  param {{ module: SyncInitInput }} module - Passing `SyncInitInput` directly is deprecated.  returns {InitOutput} *</div>
+            
+            
+            
+            <div class="footer">
+                <a href="file://crates/web-core/pkgs/web-core/web_core.d.ts" target="_blank">crates/web-core/pkgs/web-core/web_core.d.ts:74</a>
+            </div>
+        </section>
+    
+        <section class="entry" id="__wbg_init">
+            <div class="entry-header">
+                <span class="type">function</span>
+                <h2 class="name">__wbg_init</h2>
+            </div>
+            <div class="description">f `module_or_path` is {RequestInfo} or {URL}, makes a request and or everything else, calls `WebAssembly.instantiate` directly.  param {{ module_or_path: InitInput | Promise<InitInput> }} module_or_path - Passing `InitInput` directly is deprecated.  returns {Promise<InitOutput>} *</div>
+            
+            
+            
+            <div class="footer">
+                <a href="file://crates/web-core/pkgs/web-core/web_core.d.ts" target="_blank">crates/web-core/pkgs/web-core/web_core.d.ts:84</a>
+            </div>
+        </section>
+    
+        <section class="entry" id="#[macro_export]">
+            <div class="entry-header">
+                <span class="type">variable</span>
+                <h2 class="name">#[macro_export]</h2>
+            </div>
+            <div class="description">Maps the input of [`namespace_prefix!`](macro.namespace_prefix.html) to the output of [`namespace_url!`](macro.namespace_url.html).</div>
+            
+            
+            
+            <div class="footer">
+                <a href="file://crates/web-core/target/debug/build/markup5ever-b14cb8222b378539/out/generated.rs" target="_blank">crates/web-core/target/debug/build/markup5ever-b14cb8222b378539/out/generated.rs:2847</a>
+            </div>
+        </section>
+    
+        <section class="entry" id="">
+            <div class="entry-header">
+                <span class="type">variable</span>
+                <h2 class="name"></h2>
+            </div>
+            <div class="description">A map of entity names to their codepoints. The second codepoint will be 0 if the entity contains a single codepoint. Entities have their preceeding '&' removed.  # Examples  ``` use markup5ever::data::NAMED_ENTITIES;  assert_eq!(NAMED_ENTITIES.get("gt;").unwrap(), &(62, 0)); ```</div>
+            
+            
+            
+            <div class="footer">
+                <a href="file://crates/web-core/target/debug/build/markup5ever-b14cb8222b378539/out/named_entities.rs" target="_blank">crates/web-core/target/debug/build/markup5ever-b14cb8222b378539/out/named_entities.rs:12</a>
+            </div>
+        </section>
+    
+        <section class="entry" id="#[macro_export]">
+            <div class="entry-header">
+                <span class="type">variable</span>
+                <h2 class="name">#[macro_export]</h2>
+            </div>
+            <div class="description">Maps the input of [`namespace_prefix!`](macro.namespace_prefix.html) to the output of [`namespace_url!`](macro.namespace_url.html).</div>
+            
+            
+            
+            <div class="footer">
+                <a href="file://crates/web-core/target/debug/build/markup5ever-ff81b128b7fa5176/out/generated.rs" target="_blank">crates/web-core/target/debug/build/markup5ever-ff81b128b7fa5176/out/generated.rs:2847</a>
+            </div>
+        </section>
+    
+        <section class="entry" id="">
+            <div class="entry-header">
+                <span class="type">variable</span>
+                <h2 class="name"></h2>
+            </div>
+            <div class="description">A map of entity names to their codepoints. The second codepoint will be 0 if the entity contains a single codepoint. Entities have their preceeding '&' removed.  # Examples  ``` use markup5ever::data::NAMED_ENTITIES;  assert_eq!(NAMED_ENTITIES.get("gt;").unwrap(), &(62, 0)); ```</div>
+            
+            
+            
+            <div class="footer">
+                <a href="file://crates/web-core/target/debug/build/markup5ever-ff81b128b7fa5176/out/named_entities.rs" target="_blank">crates/web-core/target/debug/build/markup5ever-ff81b128b7fa5176/out/named_entities.rs:12</a>
+            </div>
+        </section>
+    
+        <section class="entry" id="#[macro_export]">
+            <div class="entry-header">
+                <span class="type">variable</span>
+                <h2 class="name">#[macro_export]</h2>
+            </div>
+            <div class="description">Maps the input of [`namespace_prefix!`](macro.namespace_prefix.html) to the output of [`namespace_url!`](macro.namespace_url.html).</div>
+            
+            
+            
+            <div class="footer">
+                <a href="file://crates/web-core/target/wasm32-unknown-unknown/debug/build/markup5ever-7e1442a908c618a0/out/generated.rs" target="_blank">crates/web-core/target/wasm32-unknown-unknown/debug/build/markup5ever-7e1442a908c618a0/out/generated.rs:2847</a>
+            </div>
+        </section>
+    
+        <section class="entry" id="">
+            <div class="entry-header">
+                <span class="type">variable</span>
+                <h2 class="name"></h2>
+            </div>
+            <div class="description">A map of entity names to their codepoints. The second codepoint will be 0 if the entity contains a single codepoint. Entities have their preceeding '&' removed.  # Examples  ``` use markup5ever::data::NAMED_ENTITIES;  assert_eq!(NAMED_ENTITIES.get("gt;").unwrap(), &(62, 0)); ```</div>
+            
+            
+            
+            <div class="footer">
+                <a href="file://crates/web-core/target/wasm32-unknown-unknown/debug/build/markup5ever-7e1442a908c618a0/out/named_entities.rs" target="_blank">crates/web-core/target/wasm32-unknown-unknown/debug/build/markup5ever-7e1442a908c618a0/out/named_entities.rs:12</a>
+            </div>
+        </section>
+    
+        <section class="entry" id="#[macro_export]">
+            <div class="entry-header">
+                <span class="type">variable</span>
+                <h2 class="name">#[macro_export]</h2>
+            </div>
+            <div class="description">Maps the input of [`namespace_prefix!`](macro.namespace_prefix.html) to the output of [`namespace_url!`](macro.namespace_url.html).</div>
+            
+            
+            
+            <div class="footer">
+                <a href="file://crates/web-core/target/wasm32-unknown-unknown/debug/build/markup5ever-986f11d2a9596e89/out/generated.rs" target="_blank">crates/web-core/target/wasm32-unknown-unknown/debug/build/markup5ever-986f11d2a9596e89/out/generated.rs:2847</a>
+            </div>
+        </section>
+    
+        <section class="entry" id="">
+            <div class="entry-header">
+                <span class="type">variable</span>
+                <h2 class="name"></h2>
+            </div>
+            <div class="description">A map of entity names to their codepoints. The second codepoint will be 0 if the entity contains a single codepoint. Entities have their preceeding '&' removed.  # Examples  ``` use markup5ever::data::NAMED_ENTITIES;  assert_eq!(NAMED_ENTITIES.get("gt;").unwrap(), &(62, 0)); ```</div>
+            
+            
+            
+            <div class="footer">
+                <a href="file://crates/web-core/target/wasm32-unknown-unknown/debug/build/markup5ever-986f11d2a9596e89/out/named_entities.rs" target="_blank">crates/web-core/target/wasm32-unknown-unknown/debug/build/markup5ever-986f11d2a9596e89/out/named_entities.rs:12</a>
+            </div>
+        </section>
+    
+        <section class="entry" id="#[macro_export]">
+            <div class="entry-header">
+                <span class="type">variable</span>
+                <h2 class="name">#[macro_export]</h2>
+            </div>
+            <div class="description">Maps the input of [`namespace_prefix!`](macro.namespace_prefix.html) to the output of [`namespace_url!`](macro.namespace_url.html).</div>
+            
+            
+            
+            <div class="footer">
+                <a href="file://crates/web-core/target/wasm32-unknown-unknown/debug/build/markup5ever-cef8c331758ea392/out/generated.rs" target="_blank">crates/web-core/target/wasm32-unknown-unknown/debug/build/markup5ever-cef8c331758ea392/out/generated.rs:2847</a>
+            </div>
+        </section>
+    
+        <section class="entry" id="">
+            <div class="entry-header">
+                <span class="type">variable</span>
+                <h2 class="name"></h2>
+            </div>
+            <div class="description">A map of entity names to their codepoints. The second codepoint will be 0 if the entity contains a single codepoint. Entities have their preceeding '&' removed.  # Examples  ``` use markup5ever::data::NAMED_ENTITIES;  assert_eq!(NAMED_ENTITIES.get("gt;").unwrap(), &(62, 0)); ```</div>
+            
+            
+            
+            <div class="footer">
+                <a href="file://crates/web-core/target/wasm32-unknown-unknown/debug/build/markup5ever-cef8c331758ea392/out/named_entities.rs" target="_blank">crates/web-core/target/wasm32-unknown-unknown/debug/build/markup5ever-cef8c331758ea392/out/named_entities.rs:12</a>
+            </div>
+        </section>
+    
+        <section class="entry" id="#[macro_export]">
+            <div class="entry-header">
+                <span class="type">variable</span>
+                <h2 class="name">#[macro_export]</h2>
+            </div>
+            <div class="description">Maps the input of [`namespace_prefix!`](macro.namespace_prefix.html) to the output of [`namespace_url!`](macro.namespace_url.html).</div>
+            
+            
+            
+            <div class="footer">
+                <a href="file://crates/web-core/target/wasm32-unknown-unknown/debug/build/markup5ever-f30fb9bb29d97dd7/out/generated.rs" target="_blank">crates/web-core/target/wasm32-unknown-unknown/debug/build/markup5ever-f30fb9bb29d97dd7/out/generated.rs:2847</a>
+            </div>
+        </section>
+    
+        <section class="entry" id="">
+            <div class="entry-header">
+                <span class="type">variable</span>
+                <h2 class="name"></h2>
+            </div>
+            <div class="description">A map of entity names to their codepoints. The second codepoint will be 0 if the entity contains a single codepoint. Entities have their preceeding '&' removed.  # Examples  ``` use markup5ever::data::NAMED_ENTITIES;  assert_eq!(NAMED_ENTITIES.get("gt;").unwrap(), &(62, 0)); ```</div>
+            
+            
+            
+            <div class="footer">
+                <a href="file://crates/web-core/target/wasm32-unknown-unknown/debug/build/markup5ever-f30fb9bb29d97dd7/out/named_entities.rs" target="_blank">crates/web-core/target/wasm32-unknown-unknown/debug/build/markup5ever-f30fb9bb29d97dd7/out/named_entities.rs:12</a>
+            </div>
+        </section>
+    
+        <section class="entry" id="#[macro_export]">
+            <div class="entry-header">
+                <span class="type">variable</span>
+                <h2 class="name">#[macro_export]</h2>
+            </div>
+            <div class="description">Maps the input of `namespace_prefix!` to the output of `namespace_url!`.</div>
+            
+            
+            
+            <div class="footer">
+                <a href="file://crates/web-core/target/wasm32-unknown-unknown/debug/build/markup5ever-f664ab89b244c60e/out/generated.rs" target="_blank">crates/web-core/target/wasm32-unknown-unknown/debug/build/markup5ever-f664ab89b244c60e/out/generated.rs:2241</a>
+            </div>
+        </section>
+    
+        <section class="entry" id="">
+            <div class="entry-header">
+                <span class="type">variable</span>
+                <h2 class="name"></h2>
+            </div>
+            <div class="description">A map of entity names to their codepoints. The second codepoint will be 0 if the entity contains a single codepoint. Entities have their preceeding '&' removed.  # Examples  ``` use markup5ever::data::NAMED_ENTITIES;  assert_eq!(NAMED_ENTITIES.get("gt;").unwrap(), &(62, 0)); ```</div>
+            
+            
+            
+            <div class="footer">
+                <a href="file://crates/web-core/target/wasm32-unknown-unknown/debug/build/markup5ever-f664ab89b244c60e/out/named_entities.rs" target="_blank">crates/web-core/target/wasm32-unknown-unknown/debug/build/markup5ever-f664ab89b244c60e/out/named_entities.rs:12</a>
+            </div>
+        </section>
+    
+        <section class="entry" id="#[macro_export]">
+            <div class="entry-header">
+                <span class="type">variable</span>
+                <h2 class="name">#[macro_export]</h2>
+            </div>
+            <div class="description">Maps the input of [`namespace_prefix!`](macro.namespace_prefix.html) to the output of [`namespace_url!`](macro.namespace_url.html).</div>
+            
+            
+            
+            <div class="footer">
+                <a href="file://crates/web-core/target/wasm32-unknown-unknown/release/build/markup5ever-0d37cb10e8dfc31f/out/generated.rs" target="_blank">crates/web-core/target/wasm32-unknown-unknown/release/build/markup5ever-0d37cb10e8dfc31f/out/generated.rs:2847</a>
+            </div>
+        </section>
+    
+        <section class="entry" id="">
+            <div class="entry-header">
+                <span class="type">variable</span>
+                <h2 class="name"></h2>
+            </div>
+            <div class="description">A map of entity names to their codepoints. The second codepoint will be 0 if the entity contains a single codepoint. Entities have their preceeding '&' removed.  # Examples  ``` use markup5ever::data::NAMED_ENTITIES;  assert_eq!(NAMED_ENTITIES.get("gt;").unwrap(), &(62, 0)); ```</div>
+            
+            
+            
+            <div class="footer">
+                <a href="file://crates/web-core/target/wasm32-unknown-unknown/release/build/markup5ever-0d37cb10e8dfc31f/out/named_entities.rs" target="_blank">crates/web-core/target/wasm32-unknown-unknown/release/build/markup5ever-0d37cb10e8dfc31f/out/named_entities.rs:12</a>
+            </div>
+        </section>
+    
+        <section class="entry" id="#[macro_export]">
+            <div class="entry-header">
+                <span class="type">variable</span>
+                <h2 class="name">#[macro_export]</h2>
+            </div>
+            <div class="description">Maps the input of [`namespace_prefix!`](macro.namespace_prefix.html) to the output of [`namespace_url!`](macro.namespace_url.html).</div>
+            
+            
+            
+            <div class="footer">
+                <a href="file://crates/web-core/target/wasm32-unknown-unknown/release/build/markup5ever-2bc4231ac3beef47/out/generated.rs" target="_blank">crates/web-core/target/wasm32-unknown-unknown/release/build/markup5ever-2bc4231ac3beef47/out/generated.rs:2847</a>
+            </div>
+        </section>
+    
+        <section class="entry" id="">
+            <div class="entry-header">
+                <span class="type">variable</span>
+                <h2 class="name"></h2>
+            </div>
+            <div class="description">A map of entity names to their codepoints. The second codepoint will be 0 if the entity contains a single codepoint. Entities have their preceeding '&' removed.  # Examples  ``` use markup5ever::data::NAMED_ENTITIES;  assert_eq!(NAMED_ENTITIES.get("gt;").unwrap(), &(62, 0)); ```</div>
+            
+            
+            
+            <div class="footer">
+                <a href="file://crates/web-core/target/wasm32-unknown-unknown/release/build/markup5ever-2bc4231ac3beef47/out/named_entities.rs" target="_blank">crates/web-core/target/wasm32-unknown-unknown/release/build/markup5ever-2bc4231ac3beef47/out/named_entities.rs:12</a>
+            </div>
+        </section>
+    
+        <section class="entry" id="#[macro_export]">
+            <div class="entry-header">
+                <span class="type">variable</span>
+                <h2 class="name">#[macro_export]</h2>
+            </div>
+            <div class="description">Maps the input of [`namespace_prefix!`](macro.namespace_prefix.html) to the output of [`namespace_url!`](macro.namespace_url.html).</div>
+            
+            
+            
+            <div class="footer">
+                <a href="file://crates/web-core/target/wasm32-unknown-unknown/release/build/markup5ever-7b5eaa487749d834/out/generated.rs" target="_blank">crates/web-core/target/wasm32-unknown-unknown/release/build/markup5ever-7b5eaa487749d834/out/generated.rs:2847</a>
+            </div>
+        </section>
+    
+        <section class="entry" id="">
+            <div class="entry-header">
+                <span class="type">variable</span>
+                <h2 class="name"></h2>
+            </div>
+            <div class="description">A map of entity names to their codepoints. The second codepoint will be 0 if the entity contains a single codepoint. Entities have their preceeding '&' removed.  # Examples  ``` use markup5ever::data::NAMED_ENTITIES;  assert_eq!(NAMED_ENTITIES.get("gt;").unwrap(), &(62, 0)); ```</div>
+            
+            
+            
+            <div class="footer">
+                <a href="file://crates/web-core/target/wasm32-unknown-unknown/release/build/markup5ever-7b5eaa487749d834/out/named_entities.rs" target="_blank">crates/web-core/target/wasm32-unknown-unknown/release/build/markup5ever-7b5eaa487749d834/out/named_entities.rs:12</a>
+            </div>
+        </section>
+    
+        <section class="entry" id="#[macro_export]">
+            <div class="entry-header">
+                <span class="type">variable</span>
+                <h2 class="name">#[macro_export]</h2>
+            </div>
+            <div class="description">Maps the input of [`namespace_prefix!`](macro.namespace_prefix.html) to the output of [`namespace_url!`](macro.namespace_url.html).</div>
+            
+            
+            
+            <div class="footer">
+                <a href="file://crates/web-core/target/wasm32-unknown-unknown/release/build/markup5ever-9a83238e4010e823/out/generated.rs" target="_blank">crates/web-core/target/wasm32-unknown-unknown/release/build/markup5ever-9a83238e4010e823/out/generated.rs:2847</a>
+            </div>
+        </section>
+    
+        <section class="entry" id="">
+            <div class="entry-header">
+                <span class="type">variable</span>
+                <h2 class="name"></h2>
+            </div>
+            <div class="description">A map of entity names to their codepoints. The second codepoint will be 0 if the entity contains a single codepoint. Entities have their preceeding '&' removed.  # Examples  ``` use markup5ever::data::NAMED_ENTITIES;  assert_eq!(NAMED_ENTITIES.get("gt;").unwrap(), &(62, 0)); ```</div>
+            
+            
+            
+            <div class="footer">
+                <a href="file://crates/web-core/target/wasm32-unknown-unknown/release/build/markup5ever-9a83238e4010e823/out/named_entities.rs" target="_blank">crates/web-core/target/wasm32-unknown-unknown/release/build/markup5ever-9a83238e4010e823/out/named_entities.rs:12</a>
+            </div>
+        </section>
+    
+        <section class="entry" id="#[macro_export]">
+            <div class="entry-header">
+                <span class="type">variable</span>
+                <h2 class="name">#[macro_export]</h2>
+            </div>
+            <div class="description">Maps the input of [`namespace_prefix!`](macro.namespace_prefix.html) to the output of [`namespace_url!`](macro.namespace_url.html).</div>
+            
+            
+            
+            <div class="footer">
+                <a href="file://crates/web-core/target/wasm32-unknown-unknown/release/build/markup5ever-befa648f2ce3569a/out/generated.rs" target="_blank">crates/web-core/target/wasm32-unknown-unknown/release/build/markup5ever-befa648f2ce3569a/out/generated.rs:2847</a>
+            </div>
+        </section>
+    
+        <section class="entry" id="">
+            <div class="entry-header">
+                <span class="type">variable</span>
+                <h2 class="name"></h2>
+            </div>
+            <div class="description">A map of entity names to their codepoints. The second codepoint will be 0 if the entity contains a single codepoint. Entities have their preceeding '&' removed.  # Examples  ``` use markup5ever::data::NAMED_ENTITIES;  assert_eq!(NAMED_ENTITIES.get("gt;").unwrap(), &(62, 0)); ```</div>
+            
+            
+            
+            <div class="footer">
+                <a href="file://crates/web-core/target/wasm32-unknown-unknown/release/build/markup5ever-befa648f2ce3569a/out/named_entities.rs" target="_blank">crates/web-core/target/wasm32-unknown-unknown/release/build/markup5ever-befa648f2ce3569a/out/named_entities.rs:12</a>
+            </div>
+        </section>
+    
+        <section class="entry" id="#[macro_export]">
+            <div class="entry-header">
+                <span class="type">variable</span>
+                <h2 class="name">#[macro_export]</h2>
+            </div>
+            <div class="description">Maps the input of `namespace_prefix!` to the output of `namespace_url!`.</div>
+            
+            
+            
+            <div class="footer">
+                <a href="file://crates/web-core/target/wasm32-unknown-unknown/release/build/markup5ever-cfc9320ddbc4c10b/out/generated.rs" target="_blank">crates/web-core/target/wasm32-unknown-unknown/release/build/markup5ever-cfc9320ddbc4c10b/out/generated.rs:2241</a>
+            </div>
+        </section>
+    
+        <section class="entry" id="">
+            <div class="entry-header">
+                <span class="type">variable</span>
+                <h2 class="name"></h2>
+            </div>
+            <div class="description">A map of entity names to their codepoints. The second codepoint will be 0 if the entity contains a single codepoint. Entities have their preceeding '&' removed.  # Examples  ``` use markup5ever::data::NAMED_ENTITIES;  assert_eq!(NAMED_ENTITIES.get("gt;").unwrap(), &(62, 0)); ```</div>
+            
+            
+            
+            <div class="footer">
+                <a href="file://crates/web-core/target/wasm32-unknown-unknown/release/build/markup5ever-cfc9320ddbc4c10b/out/named_entities.rs" target="_blank">crates/web-core/target/wasm32-unknown-unknown/release/build/markup5ever-cfc9320ddbc4c10b/out/named_entities.rs:12</a>
+            </div>
+        </section>
+    
+    </main>
+</body>
+</html>
+    

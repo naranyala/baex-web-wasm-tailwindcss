@@ -11,7 +11,9 @@
     "format": "biome format --write",
     "preview": "rsbuild preview",
     "test": "vitest run",
-    "test:wasm": "cd crates/web-core && wasm-pack test --node"
+    "test:wasm": "cd crates/web-core && wasm-pack test --node",
+    "docs:gen": "bun run tools/api-doc-gen/src/index.ts",
+    "docs:serve": "bun x serve ."
   },
   "devDependencies": {
     "@biomejs/biome": "2.4.16",

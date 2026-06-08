@@ -4,6 +4,21 @@ use crate::util::{log_debug, detect_binding, parse_event_modifiers, resolve_text
 use crate::blueprint::{build_blueprint_tree, bind_markers_to_node_paths};
 use crate::state::BINDING_ID;
 
+/// Processes a tagged template literal into a `TemplateResult` object.
+/// 
+/// This function implements the core template engine. It scans the static strings for 
+/// special binding markers:
+/// - `@event`: Binds a JavaScript event handler.
+/// - `.property`: Binds a DOM property.
+/// - `?attribute`: Binds a boolean attribute.
+/// 
+/// It replaces these markers with unique `data-baex` identifiers and generates a 
+/// `bindings` array describing how to resolve these markers using the provided values.
+/// Additionally, it builds a `blueprint` tree of the resulting HTML for optimized DOM patching.
+/// 
+/// @param strings The static parts of the template literal.
+/// @param values The dynamic values inserted into the template.
+/// @returns A `TemplateResult` object containing the final HTML, the bindings list, and the blueprint.
 #[wasm_bindgen]
 pub fn process_template(strings: JsValue, values: JsValue) -> JsValue {
     log_debug("Phase 1: Starting process_template");
@@ -106,6 +121,10 @@ pub fn process_template(strings: JsValue, values: JsValue) -> JsValue {
     result.into()
 }
 
+/// Resets the internal global binding ID counter to zero.
+/// 
+/// This is typically called during tests or when refreshing the page 
+/// to ensure binding markers start from `b0`.
 #[wasm_bindgen]
 pub fn reset_binding_counter() {
     BINDING_ID.with(|id| *id.borrow_mut() = 0);
