@@ -1,639 +1,19 @@
-use js_sys::{Array, Object, Reflect};
-use serde::{Deserialize, Serialize};
-use std::cell::RefCell;
-use std::collections::HashMap;
 use wasm_bindgen::prelude::*;
 use web_sys::window;
 
-use html5ever::tree_builder::TreeBuilderOpts;
-use html5ever::QualName;
-use markup5ever_rcdom::{Handle, NodeData};
-
-
-#[derive(Serialize, Deserialize)]
-#[serde(rename_all = "lowercase")]
-enum BlueprintNodeType {
-    Text,
-    Element,
-}
-
-#[derive(Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-struct BlueprintAttribute {
-    name: String,
-    value: String,
-    is_dynamic: bool,
-    is_key: bool,
-    marker: Option<String>,
-}
-
-#[derive(Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-struct BlueprintNode {
-    node_type: BlueprintNodeType,
-    tag: Option<String>,
-    text_content: Option<String>,
-    attributes: Vec<BlueprintAttribute>,
-    children: Vec<BlueprintNode>,
-}
-
-#[derive(Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-struct Blueprint {
-    root: BlueprintNode,
-    version: String,
-    raw_html: String,
-}
-
-thread_local! {
-    static SIGNAL_VALUES: RefCell<HashMap<String, JsValue>> = RefCell::new(HashMap::new());
-    static SIGNAL_SUBSCRIBERS: RefCell<HashMap<String, Vec<js_sys::Function>>> = RefCell::new(HashMap::new());
-    static SCOPED_SIGNAL_VALUES: RefCell<HashMap<u32, HashMap<String, JsValue>>> = RefCell::new(HashMap::new());
-    static SCOPED_SIGNAL_SUBSCRIBERS: RefCell<HashMap<u32, HashMap<String, Vec<js_sys::Function>>>> = RefCell::new(HashMap::new());
-    static BINDING_ID: RefCell<u32> = RefCell::new(0);
-    static COMPONENT_ID_COUNTER: RefCell<u32> = RefCell::new(0);
-    static COMPONENT_STATE: RefCell<HashMap<u32, ComponentState>> = RefCell::new(HashMap::new());
-}
-
-struct ComponentState {
-    values: HashMap<String, JsValue>,
-    changed: HashMap<String, JsValue>,
-}
-
-impl ComponentState {
-    fn new() -> Self {
-        Self {
-            values: HashMap::new(),
-            changed: HashMap::new(),
-        }
-    }
-}
-
-// ── Debugging ─────────────────────────────────────────────────────────
-
-static DEBUG: bool = true;
-
-fn log_debug(msg: &str) {
-    if DEBUG {
-        web_sys::console::log_1(&JsValue::from_str(&format!("[BAEX-DEBUG] {}", msg)));
-    }
-}
-
-fn escape_html(s: &str) -> String {
-    s.replace('&', "&amp;")
-        .replace('<', "&lt;")
-        .replace('>', "&gt;")
-        .replace('"', "&quot;")
-        .replace('\'', "&#039;")
-}
-
-fn detect_binding(s: &str) -> Option<(&'static str, &str)> {
-    if !s.ends_with('=') {
-        return None;
-    }
-    let before_eq = &s[..s.len() - 1];
-    
-    for (i, c) in before_eq.char_indices().rev() {
-        if c == '@' || c == '.' || c == '?' {
-            let name = &before_eq[i + 1..];
-            if name.is_empty() {
-                return None;
-            }
-            return match c {
-                '@' => Some(("event", name)),
-                '.' => Some(("property", name)),
-                '?' => Some(("bool", name)),
-                _ => unreachable!(),
-            };
-        } else if !c.is_alphanumeric() && c != '_' && c != '.' {
-            return None;
-        }
-    }
-    None
-}
-
-fn parse_event_modifiers(name: &str) -> (&str, Vec<&str>) {
-    let parts: Vec<&str> = name.split('.').collect();
-    if parts.len() <= 1 {
-        return (name, vec![]);
-    }
-    (parts[0], parts[1..].to_vec())
-}
-
-fn js_to_string(val: &JsValue) -> String {
-    if val.is_null() || val.is_undefined() {
-        return String::new();
-    }
-    if let Some(s) = val.as_string() {
-        return s;
-    }
-    if let Some(n) = val.as_f64() {
-        return n.to_string();
-    }
-    if let Some(b) = val.as_bool() {
-        return b.to_string();
-    }
-    String::new()
-}
-
-fn is_template_result(val: &JsValue) -> bool {
-    if !val.is_object() {
-        return false;
-    }
-    let has_html =
-        js_sys::Reflect::has(val, &JsValue::from_str("html")).unwrap_or(false);
-    let has_bindings =
-        js_sys::Reflect::has(val, &JsValue::from_str("bindings")).unwrap_or(false);
-    has_html && has_bindings
-}
-
-fn is_signal_like(val: &JsValue) -> bool {
-    if !val.is_object() {
-        return false;
-    }
-    if is_template_result(val) {
-        return false;
-    }
-    js_sys::Reflect::has(val, &JsValue::from_str("value")).unwrap_or(false)
-}
-
-fn resolve_text_value(
-    value: &JsValue,
-    output: &mut String,
-    bindings: &js_sys::Array,
-    depth: u32,
-) {
-    if depth > 10 {
-        return;
-    }
-
-    if value.is_null() || value.is_undefined() {
-        return;
-    }
-
-    // ── TemplateResult: extract html + merge bindings ─────
-    if is_template_result(value) {
-        if let Ok(html_val) = Reflect::get(value, &"html".into()) {
-            if let Some(html_str) = html_val.as_string() {
-                output.push_str(&html_str);
-            }
-        }
-        if let Ok(bindings_val) = Reflect::get(value, &"bindings".into()) {
-            let nested = Array::from(&bindings_val);
-            for j in 0..nested.length() {
-                bindings.push(&nested.get(j));
-            }
-        }
-        return;
-    }
-
-    // ── Raw HTML: skip escaping if __raw is true ──────────────────
-    if let Ok(is_raw) = js_sys::Reflect::get(value, &"__raw".into()) {
-        if is_raw.is_truthy() {
-            if let Ok(val) = js_sys::Reflect::get(value, &"value".into()) {
-                if let Some(s) = val.as_string() {
-                    output.push_str(&s);
-                    return;
-                }
-            }
-        }
-    }
-
-
-    // ── Array: iterate and resolve each item ──────────────
-
-    if Array::is_array(value) {
-        let arr = Array::from(value);
-        for j in 0..arr.length() {
-            resolve_text_value(&arr.get(j), output, bindings, depth + 1);
-        }
-        return;
-    }
-
-    // ── Signal / reactive value: wrap in marker and register binding ──
-    if is_signal_like(value) {
-        let marker = format!(
-            "t{}",
-            BINDING_ID.with(|id| {
-                let mut id = id.borrow_mut();
-                let cur = *id;
-                *id += 1;
-                cur
-            })
-        );
-
-        let val_str = js_to_string(value);
-        output.push_str(&format!(
-            "<span data-baex=\"{}\">{}</span>",
-            marker,
-            escape_html(&val_str)
-        ));
-
-        let binding = Object::new();
-        Reflect::set(&binding, &"marker".into(), &marker.into()).unwrap();
-        Reflect::set(&binding, &"type".into(), &"text".into()).unwrap();
-        Reflect::set(&binding, &"valueIdx".into(), &JsValue::from_f64(0.0)).unwrap();
-
-        bindings.push(&binding);
-        return;
-    }
-
-    // ── Primitive: escape and append ──────────────────────
-    output.push_str(&escape_html(&js_to_string(value)));
-}
-
-#[wasm_bindgen]
-pub fn register_component() -> u32 {
-    COMPONENT_ID_COUNTER.with(|id| {
-        let mut id = id.borrow_mut();
-        let cur = *id;
-        *id += 1;
-        cur
-    })
-}
-
-#[wasm_bindgen]
-pub fn update_component_property(cid: u32, name: String, value: JsValue) -> bool {
-    COMPONENT_STATE.with(|state| {
-        let mut state = state.borrow_mut();
-        let comp = state.entry(cid).or_insert_with(ComponentState::new);
-
-        let old_value = comp.values.get(&name).cloned().unwrap_or(JsValue::UNDEFINED);
-
-        if old_value != value {
-            comp.changed.insert(name.clone(), old_value);
-            comp.values.insert(name, value);
-            true
-        } else {
-            false
-        }
-    })
-}
-
-#[wasm_bindgen]
-pub fn get_component_property(cid: u32, name: String) -> JsValue {
-    COMPONENT_STATE.with(|state| {
-        state
-            .borrow()
-            .get(&cid)
-            .and_then(|comp| comp.values.get(&name).cloned())
-            .unwrap_or(JsValue::UNDEFINED)
-    })
-}
-
-#[wasm_bindgen]
-pub fn get_component_changed_properties(cid: u32) -> JsValue {
-    COMPONENT_STATE.with(|state| {
-        let state = state.borrow();
-        let result = Object::new();
-        if let Some(comp) = state.get(&cid) {
-            for (name, value) in &comp.changed {
-                Reflect::set(&result, &name.into(), value).unwrap();
-            }
-        }
-        result.into()
-    })
-}
-
-#[wasm_bindgen]
-pub fn clear_component_changed_properties(cid: u32) {
-    COMPONENT_STATE.with(|state| {
-        let mut state = state.borrow_mut();
-        if let Some(comp) = state.get_mut(&cid) {
-            comp.changed.clear();
-        }
-    });
-}
-
-#[wasm_bindgen]
-pub fn remove_component(cid: u32) {
-    COMPONENT_STATE.with(|state| {
-        state.borrow_mut().remove(&cid);
-    });
-    SCOPED_SIGNAL_VALUES.with(|store| {
-        store.borrow_mut().remove(&cid);
-    });
-    SCOPED_SIGNAL_SUBSCRIBERS.with(|store| {
-        store.borrow_mut().remove(&cid);
-    });
-}
-
-// ── Reactive Signal System ──────────────────────────────────────────
-
-#[wasm_bindgen]
-pub fn create_signal(key: String, initial: JsValue, cid: Option<u32>) -> JsValue {
-    if let Some(cid) = cid {
-        SCOPED_SIGNAL_VALUES.with(|store| {
-            store.borrow_mut().entry(cid).or_default().entry(key.clone()).or_insert_with(|| initial.clone());
-        });
-        SCOPED_SIGNAL_SUBSCRIBERS.with(|store| {
-            store.borrow_mut().entry(cid).or_default().entry(key).or_default();
-        });
-    } else {
-        SIGNAL_VALUES.with(|store| {
-            store.borrow_mut().entry(key.clone()).or_insert_with(|| initial.clone());
-        });
-        SIGNAL_SUBSCRIBERS.with(|store| {
-            store.borrow_mut().entry(key).or_default();
-        });
-    }
-    initial
-}
-
-#[wasm_bindgen]
-pub fn get_signal(key: String, cid: Option<u32>) -> JsValue {
-    if let Some(cid) = cid {
-        SCOPED_SIGNAL_VALUES.with(|store| {
-            store.borrow().get(&cid)
-                .and_then(|comp_store| comp_store.get(&key).cloned())
-                .unwrap_or(JsValue::UNDEFINED)
-        })
-    } else {
-        SIGNAL_VALUES.with(|store| {
-            store.borrow().get(&key).cloned().unwrap_or(JsValue::UNDEFINED)
-        })
-    }
-}
-
-#[wasm_bindgen]
-pub fn set_signal(key: String, value: JsValue, cid: Option<u32>) {
-    if let Some(cid) = cid {
-        SCOPED_SIGNAL_VALUES.with(|store| {
-            store.borrow_mut().entry(cid).or_default().insert(key.clone(), value.clone());
-        });
-        SCOPED_SIGNAL_SUBSCRIBERS.with(|store| {
-            let store = store.borrow();
-            if let Some(comp_subs) = store.get(&cid) {
-                if let Some(callbacks) = comp_subs.get(&key) {
-                    for callback in callbacks {
-                        let _ = callback.call1(&JsValue::UNDEFINED, &value);
-                    }
-                }
-            }
-        });
-    } else {
-        SIGNAL_VALUES.with(|store| {
-            store.borrow_mut().insert(key.clone(), value.clone());
-        });
-        SIGNAL_SUBSCRIBERS.with(|store| {
-            let store = store.borrow();
-            if let Some(callbacks) = store.get(&key) {
-                for callback in callbacks {
-                    let _ = callback.call1(&JsValue::UNDEFINED, &value);
-                }
-            }
-        });
-    }
-}
-
-#[wasm_bindgen]
-pub fn on_signal_change(key: String, callback: js_sys::Function, cid: Option<u32>) {
-    if let Some(cid) = cid {
-        SCOPED_SIGNAL_SUBSCRIBERS.with(|store| {
-            store.borrow_mut().entry(cid).or_default().entry(key).or_default().push(callback);
-        });
-    } else {
-        SIGNAL_SUBSCRIBERS.with(|store| {
-            store.borrow_mut().entry(key).or_default().push(callback);
-        });
-    }
-}
-
-// ── Blueprint Tree Parsing (html5ever) ──────────────────────────────
-
-fn build_blueprint_tree(html: &str, _bindings_array: &Array) -> (Blueprint, Vec<(String, usize)>) {
-    let blueprint = Blueprint {
-        root: BlueprintNode {
-            node_type: BlueprintNodeType::Text,
-            tag: None,
-            text_content: Some(html.to_string()),
-            attributes: vec![],
-            children: vec![],
-        },
-        version: "0.0.0".to_string(),
-        raw_html: html.to_string(),
-    };
-    (blueprint, vec![])
-}
-
-fn bind_markers_to_node_paths(
-    bindings: &Array,
-    node_indices: &[(String, usize)],
-) {
-    for i in 0..bindings.length() {
-        let b = bindings.get(i);
-        if let Ok(marker) = Reflect::get(&b, &"marker".into()) {
-            if let Some(marker_str) = marker.as_string() {
-                if let Some((_, node_idx)) = node_indices.iter().find(|(m, _)| *m == marker_str) {
-                    let _ = Reflect::set(&b, &"nodeIdx".into(), &JsValue::from_f64(*node_idx as f64));
-                }
-            }
-        }
-    }
-}
-
-// ── Template Processing (core framework logic) ──────────────────────
-
-#[wasm_bindgen]
-pub fn process_template(strings: JsValue, values: JsValue) -> JsValue {
-    log_debug("Phase 1: Starting process_template");
-
-    let strings = Array::from(&strings);
-    let values = Array::from(&values);
-
-    let mut output = String::new();
-    let result_bindings = Array::new();
-
-    let strings_len = strings.length();
-    let values_len = values.length();
-
-    for i in 0..strings_len {
-        let s = strings.get(i).as_string().unwrap_or_default();
-
-        if i < values_len {
-            log_debug(&format!("Phase 2: Processing segment {}/{}", i, strings_len));
-            if let Some((bind_type, bind_name)) = detect_binding(&s) {
-                log_debug(&format!("Phase 3: Detected binding {} on {}", bind_type, bind_name));
-                let suffix = match bind_type {
-                    "event" => format!("@{}=", bind_name),
-                    "property" => format!(".{}=", bind_name),
-                    "bool" => format!("?{}=", bind_name),
-                    _ => unreachable!(),
-                };
-
-                output.push_str(&s[..s.len() - suffix.len()]);
-
-                let marker = format!(
-                    "b{}",
-                    BINDING_ID.with(|id| {
-                        let mut id = id.borrow_mut();
-                        let cur = *id;
-                        *id += 1;
-                        cur
-                    })
-                );
-
-                output.push_str(&format!("data-baex=\"{}\"", marker));
-
-                let binding = Object::new();
-                Reflect::set(&binding, &"marker".into(), &marker.into()).unwrap();
-                Reflect::set(&binding, &"type".into(), &bind_type.into()).unwrap();
-                Reflect::set(
-                    &binding,
-                    &"valueIdx".into(),
-                    &JsValue::from_f64(i as f64),
-                )
-                .unwrap();
-
-                match bind_type {
-                    "event" => {
-                        let (event_name, modifiers) = parse_event_modifiers(bind_name);
-                        Reflect::set(&binding, &"eventName".into(), &event_name.into()).unwrap();
-                        if !modifiers.is_empty() {
-                            let mod_arr = Array::new();
-                            for m in &modifiers {
-                                mod_arr.push(&(*m).into());
-                            }
-                            Reflect::set(&binding, &"modifiers".into(), &mod_arr.into()).unwrap();
-                        }
-                    }
-                    "property" => {
-                        Reflect::set(&binding, &"propName".into(), &bind_name.into()).unwrap();
-                    }
-                    "bool" => {
-                        Reflect::set(&binding, &"attrName".into(), &bind_name.into()).unwrap();
-                    }
-                    _ => {}
-                }
-
-                result_bindings.push(&binding);
-            } else {
-                output.push_str(&s);
-                let value = values.get(i);
-                resolve_text_value(&value, &mut output, &result_bindings, 0);
-            }
-        } else {
-            output.push_str(&s);
-        }
-    }
-
-    log_debug("Phase 4: Finalizing TemplateResult and Blueprint");
-    
-    let result = Object::new();
-    Reflect::set(&result, &"html".into(), &output.clone().into()).unwrap();
-    Reflect::set(&result, &"bindings".into(), &result_bindings).unwrap();
-    
-    // IR Layer 1: Blueprint (html5ever tree parsing)
-    let (blueprint, node_indices) = build_blueprint_tree(&output, &result_bindings);
-    
-    if let Ok(bp_js) = serde_wasm_bindgen::to_value(&blueprint) {
-        Reflect::set(&result, &"blueprint".into(), &bp_js).unwrap();
-    }
-    
-    // Map binding markers to their tree node indices
-    bind_markers_to_node_paths(&result_bindings, &node_indices);
-    
-    result.into()
-}
-
-// ... (rest of the file)
-
-/// Reset binding counter (useful for tests / HMR)
-#[wasm_bindgen]
-pub fn reset_binding_counter() {
-    BINDING_ID.with(|id| *id.borrow_mut() = 0);
-}
-
-// ── Component Property Helpers ──────────────────────────────────────
-
-#[wasm_bindgen]
-pub fn resolve_observed_attributes(props: JsValue) -> js_sys::Array {
-    log_debug("Starting resolve_observed_attributes");
-    log_debug(&format!("Props value: {:?}", props));
-    let attrs = Array::new();
-    
-    let keys = Reflect::own_keys(&props).unwrap();
-    log_debug(&format!("Keys length: {}", keys.length()));
-    
-    for i in 0..keys.length() {
-        let key_val = keys.get(i);
-        let key = key_val.as_string().unwrap_or_default();
-        log_debug(&format!("Processing key: {}", key));
-        
-        let decl = Reflect::get(&props, &key_val).ok();
-        let attr_val = decl.as_ref().and_then(|d| {
-            Reflect::get(d, &"attribute".into()).ok()
-        });
-        let attr_name = match attr_val {
-            Some(v) if v.is_undefined() || v.is_null() => Some(key.to_lowercase()),
-            Some(v) if v.as_bool() == Some(true) => Some(key.to_lowercase()),
-            Some(v) if v.as_bool() == Some(false) => continue,
-            Some(v) => v.as_string(),
-            None => Some(key.to_lowercase()),
-        };
-        if let Some(name) = attr_name {
-            log_debug(&format!("Adding attribute: {}", name));
-            attrs.push(&name.into());
-        }
-    }
-    attrs
-}
-
-/// Serialize a property value to an attribute string (or null to remove)
-#[wasm_bindgen]
-pub fn serialize_property(value: JsValue, type_name: Option<String>) -> JsValue {
-    if value.is_null() || value.is_undefined() {
-        return JsValue::NULL;
-    }
-    match type_name.as_deref() {
-        Some("boolean") => {
-            if value.is_truthy() {
-                JsValue::from_str("")
-            } else {
-                JsValue::NULL
-            }
-        }
-        Some("object") | Some("array") => {
-            if let Ok(s) = js_sys::JSON::stringify(&value) {
-                s.into()
-            } else {
-                JsValue::NULL
-            }
-        }
-        _ => JsValue::from_str(&js_to_string(&value)),
-    }
-}
-
-/// Deserialize an attribute string to a property value
-#[wasm_bindgen]
-pub fn deserialize_property(
-    value: Option<String>,
-    type_name: Option<String>,
-) -> JsValue {
-    let value = match value {
-        Some(v) => v,
-        None => return JsValue::UNDEFINED,
-    };
-    match type_name.as_deref() {
-        Some("number") => {
-            let n: f64 = value.parse().unwrap_or(f64::NAN);
-            if n.is_nan() {
-                value.into()
-            } else {
-                n.into()
-            }
-        }
-        Some("boolean") => {
-            (value != "false").into()
-        }
-        Some("object") | Some("array") => {
-            js_sys::JSON::parse(&value).unwrap_or(JsValue::from_str(&value))
-        }
-        _ => value.into(),
-    }
-}
-
-// ── Global API Registration ────────────────────────────────────────
+pub mod blueprint;
+pub mod component;
+pub mod serialize;
+pub mod signal;
+pub mod state;
+pub mod template;
+pub mod util;
+
+// Re-exports for wasm_bindgen
+pub use component::*;
+pub use serialize::*;
+pub use signal::*;
+pub use template::*;
 
 #[wasm_bindgen]
 pub fn register_globals() {
@@ -643,18 +23,21 @@ pub fn register_globals() {
     };
 
     let bind = |name: &str, val: &JsValue| {
-        let _ = Reflect::set(&window, &name.into(), val);
+        let _ = js_sys::Reflect::set(&window, &name.into(), val);
     };
 
     bind("wasm_registered", &JsValue::from_bool(true));
 }
 
-// ── Tests ───────────────────────────────────────────────────────────
-
 #[cfg(test)]
 mod tests {
     use super::*;
     use wasm_bindgen_test::*;
+    use crate::util::*;
+    use crate::signal::*;
+    use crate::template::*;
+    use crate::serialize::*;
+    use crate::component::*;
 
     // ── Pure function tests (no WASM needed during build) ──────────
 
@@ -690,65 +73,61 @@ mod tests {
 
     #[test]
     fn test_detect_binding_event() {
-        assert_eq!(detect_binding("@click="), Some(("event", "click")));
-        assert_eq!(detect_binding("@mouseenter="), Some(("event", "mouseenter")));
-        assert_eq!(detect_binding("@keydown="), Some(("event", "keydown")));
+        assert_eq!(util::detect_binding("@click="), Some(("event", "click")));
+        assert_eq!(util::detect_binding("@mouseenter="), Some(("event", "mouseenter")));
+        assert_eq!(util::detect_binding("@keydown="), Some(("event", "keydown")));
     }
 
     #[test]
     fn test_detect_binding_event_modifiers() {
-        assert_eq!(detect_binding("@click.prevent="), Some(("event", "click.prevent")));
-        assert_eq!(detect_binding("@submit.prevent.stop="), Some(("event", "submit.prevent.stop")));
-        assert_eq!(detect_binding("@keydown.enter="), Some(("event", "keydown.enter")));
+        assert_eq!(util::detect_binding("@click.prevent="), Some(("event", "click.prevent")));
+        assert_eq!(util::detect_binding("@submit.prevent.stop="), Some(("event", "submit.prevent.stop")));
+        assert_eq!(util::detect_binding("@keydown.enter="), Some(("event", "keydown.enter")));
     }
 
     #[test]
     fn test_detect_binding_property() {
-        assert_eq!(detect_binding(".value="), Some(("property", "value")));
-        assert_eq!(detect_binding(".className="), Some(("property", "className")));
+        assert_eq!(util::detect_binding(".value="), Some(("property", "value")));
+        assert_eq!(util::detect_binding(".className="), Some(("property", "className")));
     }
 
     #[test]
     fn test_detect_binding_bool() {
-        assert_eq!(detect_binding("?hidden="), Some(("bool", "hidden")));
-        assert_eq!(detect_binding("?disabled="), Some(("bool", "disabled")));
+        assert_eq!(util::detect_binding("?hidden="), Some(("bool", "hidden")));
+        assert_eq!(util::detect_binding("?disabled="), Some(("bool", "disabled")));
     }
 
     #[test]
     fn test_detect_binding_edge_cases() {
-        assert_eq!(detect_binding(""), None);
-        assert_eq!(detect_binding("a"), None);
-        assert_eq!(detect_binding("=value"), None);
-        assert_eq!(detect_binding("click="), None);
-        assert_eq!(detect_binding("@="), None);
-        assert_eq!(detect_binding("@123="), Some(("event", "123")));
-        assert_eq!(detect_binding("@data_value="), Some(("event", "data_value")));
+        assert_eq!(util::detect_binding(""), None);
+        assert_eq!(util::detect_binding("a"), None);
+        assert_eq!(util::detect_binding("=value"), None);
+        assert_eq!(util::detect_binding("click="), None);
+        assert_eq!(util::detect_binding("@="), None);
+        assert_eq!(util::detect_binding("@123="), Some(("event", "123")));
+        assert_eq!(util::detect_binding("@data_value="), Some(("event", "data_value")));
     }
 
     #[test]
     fn test_detect_binding_multiple_suffixes() {
-        // Only the last @ . ? before = counts
-        // Note: no longer stops at '.' so @click.prevent= works
-        assert_eq!(detect_binding("class @click="), Some(("event", "click")));
-        assert_eq!(detect_binding("nested.value .prop="), Some(("property", "prop")));
+        assert_eq!(util::detect_binding("class @click="), Some(("event", "click")));
+        assert_eq!(util::detect_binding("nested.value .prop="), Some(("property", "prop")));
     }
 
     #[wasm_bindgen_test]
     fn test_parse_event_modifiers() {
-        let (name, mods) = parse_event_modifiers("click");
+        let (name, mods) = util::parse_event_modifiers("click");
         assert_eq!(name, "click");
         assert_eq!(mods.len(), 0);
 
-        let (name, mods) = parse_event_modifiers("click.prevent");
+        let (name, mods) = util::parse_event_modifiers("click.prevent");
         assert_eq!(name, "click");
         assert_eq!(mods, vec!["prevent"]);
 
-        let (name, mods) = parse_event_modifiers("submit.prevent.stop");
+        let (name, mods) = util::parse_event_modifiers("submit.prevent.stop");
         assert_eq!(name, "submit");
         assert_eq!(mods, vec!["prevent", "stop"]);
     }
-
-    // ── WASM runtime tests ─────────────────────────────────────────
 
     #[wasm_bindgen_test]
     fn test_js_to_string_various() {
@@ -765,13 +144,11 @@ mod tests {
         let obj = js_sys::Object::new().into();
         assert!(!is_template_result(&obj));
 
-        // Create a proper TemplateResult-like object
         let tr = js_sys::Object::new();
         js_sys::Reflect::set(&tr, &"html".into(), &"<p>Hi</p>".into()).unwrap();
         js_sys::Reflect::set(&tr, &"bindings".into(), &js_sys::Array::new()).unwrap();
         assert!(is_template_result(&tr.into()));
 
-        // Missing one property
         let partial = js_sys::Object::new();
         js_sys::Reflect::set(&partial, &"html".into(), &"<p>Hi</p>".into()).unwrap();
         assert!(!is_template_result(&partial.into()));
@@ -782,12 +159,10 @@ mod tests {
         let obj = js_sys::Object::new().into();
         assert!(!is_signal_like(&obj));
 
-        // Signal has .value but NOT .html + .bindings
         let sig = js_sys::Object::new();
         js_sys::Reflect::set(&sig, &"value".into(), &42.into()).unwrap();
         assert!(is_signal_like(&sig.into()));
 
-        // TemplateResult should NOT be signal-like
         let tr = js_sys::Object::new();
         js_sys::Reflect::set(&tr, &"html".into(), &"<p>Hi</p>".into()).unwrap();
         js_sys::Reflect::set(&tr, &"bindings".into(), &js_sys::Array::new()).unwrap();
@@ -797,19 +172,19 @@ mod tests {
     #[wasm_bindgen_test]
     fn test_signal_create_get_set() {
         reset_binding_counter();
-        create_signal("test_sig".into(), "initial".into());
-        let val = get_signal("test_sig".into());
+        create_signal("test_sig".into(), "initial".into(), None);
+        let val = get_signal("test_sig".into(), None);
         assert_eq!(val.as_string(), Some("initial".into()));
 
-        set_signal("test_sig".into(), "updated".into());
-        let val = get_signal("test_sig".into());
+        set_signal("test_sig".into(), "updated".into(), None);
+        let val = get_signal("test_sig".into(), None);
         assert_eq!(val.as_string(), Some("updated".into()));
     }
 
     #[wasm_bindgen_test]
     fn test_signal_on_change() {
         let key = "change_sig";
-        create_signal(key.into(), 0.into());
+        create_signal(key.into(), 0.into(), None);
         let results = js_sys::Array::new();
         let results_clone = results.clone();
 
@@ -821,10 +196,10 @@ mod tests {
             cb.forget();
             f
         };
-        on_signal_change(key.into(), cb_fn);
+        on_signal_change(key.into(), cb_fn, None);
 
-        set_signal(key.into(), 1.into());
-        set_signal(key.into(), 2.into());
+        set_signal(key.into(), 1.into(), None);
+        set_signal(key.into(), 2.into(), None);
 
         assert_eq!(results.length(), 2);
         assert_eq!(results.get(0).as_f64(), Some(1.0));
@@ -966,7 +341,6 @@ mod tests {
     fn test_process_template_nested_template_result() {
         reset_binding_counter();
 
-        // Create a nested TemplateResult: { html: "<span>inner</span>", bindings: [] }
         let inner = js_sys::Object::new();
         js_sys::Reflect::set(&inner, &"html".into(), &"<span>inner</span>".into())
             .unwrap();
@@ -995,7 +369,6 @@ mod tests {
     fn test_process_template_signal_wrapping() {
         reset_binding_counter();
 
-        // Create signal-like object
         let sig = js_sys::Object::new();
         js_sys::Reflect::set(&sig, &"value".into(), &"resolved".into()).unwrap();
 
@@ -1068,7 +441,6 @@ mod tests {
 
     #[wasm_bindgen_test]
     fn test_serialize_deserialize_string() {
-        // String round-trip
         let serialized = serialize_property("hello".into(), None);
         assert_eq!(serialized.as_string(), Some("hello".into()));
 
@@ -1084,30 +456,24 @@ mod tests {
         let deserialized = deserialize_property(Some("42".into()), Some("number".into()));
         assert_eq!(deserialized.as_f64(), Some(42.0));
 
-        // NaN passthrough
         let nan = deserialize_property(Some("notanumber".into()), Some("number".into()));
         assert_eq!(nan.as_string(), Some("notanumber".into()));
     }
 
     #[wasm_bindgen_test]
     fn test_serialize_deserialize_boolean() {
-        // true → ""
         let serialized_true = serialize_property(true.into(), Some("boolean".into()));
         assert_eq!(serialized_true.as_string(), Some("".into()));
 
-        // false → null
         let serialized_false = serialize_property(false.into(), Some("boolean".into()));
         assert!(serialized_false.is_null());
 
-        // "" → true
         let deserialized_true = deserialize_property(Some("".into()), Some("boolean".into()));
         assert_eq!(deserialized_true.as_bool(), Some(true));
 
-        // "false" → false
         let deserialized_false = deserialize_property(Some("false".into()), Some("boolean".into()));
         assert_eq!(deserialized_false.as_bool(), Some(false));
 
-        // any other string → true
         let deserialized_any = deserialize_property(Some("yes".into()), Some("boolean".into()));
         assert_eq!(deserialized_any.as_bool(), Some(true));
     }
@@ -1131,21 +497,17 @@ mod tests {
     fn test_resolve_observed_attributes() {
         let props = js_sys::Object::new();
 
-        // name: { } → attr "name"
         let decl_name = js_sys::Object::new();
         js_sys::Reflect::set(&props, &"name".into(), &decl_name).unwrap();
 
-        // count: { type: Number } → attr "count"
         let decl_count = js_sys::Object::new();
         js_sys::Reflect::set(&decl_count, &"type".into(), &"number".into()).unwrap();
         js_sys::Reflect::set(&props, &"count".into(), &decl_count).unwrap();
 
-        // internal: { attribute: false } → skipped
         let decl_internal = js_sys::Object::new();
         js_sys::Reflect::set(&decl_internal, &"attribute".into(), &false.into()).unwrap();
         js_sys::Reflect::set(&props, &"internal".into(), &decl_internal).unwrap();
 
-        // custom: { attribute: "data-custom" } → attr "data-custom"
         let decl_custom = js_sys::Object::new();
         js_sys::Reflect::set(&decl_custom, &"attribute".into(), &"data-custom".into()).unwrap();
         js_sys::Reflect::set(&props, &"custom".into(), &decl_custom).unwrap();
@@ -1162,7 +524,6 @@ mod tests {
 
     #[wasm_bindgen_test]
     fn test_serialize_deserialize_number_edge_cases() {
-        // Infinity
         let inf = f64::INFINITY;
         let serialized = serialize_property(inf.into(), Some("number".into()));
         assert_eq!(serialized.as_string(), Some("Infinity".into()));
@@ -1170,7 +531,6 @@ mod tests {
         let deserialized = deserialize_property(Some("Infinity".into()), Some("number".into()));
         assert_eq!(deserialized.as_f64(), Some(f64::INFINITY));
 
-        // Negative Infinity
         let neg_inf = f64::NEG_INFINITY;
         let serialized_neg = serialize_property(neg_inf.into(), Some("number".into()));
         assert_eq!(serialized_neg.as_string(), Some("-Infinity".into()));
@@ -1193,7 +553,6 @@ mod tests {
 
     #[wasm_bindgen_test]
     fn test_deeply_nested_template_results() {
-        // Create a chain of 15 nested TemplateResults (should hit the depth limit of 10)
         let mut current = js_sys::Object::new();
         js_sys::Reflect::set(&current, &"html".into(), &"base".into()).unwrap();
         js_sys::Reflect::set(&current, &"bindings".into(), &js_sys::Array::new()).unwrap();
@@ -1220,7 +579,6 @@ mod tests {
             .as_string()
             .unwrap();
         
-        // It should stop at depth 10 and not crash
         assert!(html.contains("wrap"));
     }
 

@@ -20,9 +20,9 @@ import initUtils, {
   add,
   reverse_string,
 } from '../pkgs/baex-web-utils/baex_web_utils.js';
-import './components/app.js';
-import './components/status-footer.js';
-import './components/status-modal.js';
+import './app/app.js';
+import './widgets/status-footer.js';
+import './widgets/status-modal.js';
 import apiManifest from './api-manifest.json';
 
 const rootEl = document.querySelector('#root');

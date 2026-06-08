@@ -1,5 +1,5 @@
 import { beforeAll, describe, expect, it } from 'vitest';
-import { BaexNav, tabsSignal, viewSignal } from '../components/nav.js';
+import { BaexNav, tabsSignal, viewSignal } from '../app/nav.js';
 import { BaexElement, defineComponent, html } from '../framework/index.js';
 import { setupWasm } from './setup.js';
 
@@ -9,14 +9,14 @@ beforeAll(async () => {
 });
 
 describe('BaexNav', () => {
-  it('renders Home button by default', async () => {
+  it('renders RAG button by default', async () => {
     const nav = document.createElement('test-nav-render') as HTMLElement;
     document.body.appendChild(nav);
     await new Promise((r) => queueMicrotask(r));
 
-    const homeBtn = nav.querySelector('[data-view="home"]');
-    expect(homeBtn).toBeTruthy();
-    expect(homeBtn?.textContent?.trim()).toBe('Home');
+    const ragBtn = nav.querySelector('[data-view="rag"]');
+    expect(ragBtn).toBeTruthy();
+    expect(ragBtn?.textContent?.trim()).toBe('RAG');
 
     document.body.removeChild(nav);
   });
@@ -78,10 +78,10 @@ describe('BaexNav', () => {
     closeBtn.click();
     await new Promise((r) => queueMicrotask(r));
 
-    expect(viewSignal.value).toBe('home');
+    expect(viewSignal.value).toBe('rag');
 
     tabsSignal.value = [];
-    viewSignal.value = 'home';
+    viewSignal.value = 'rag';
     document.body.removeChild(nav);
   });
 
@@ -94,7 +94,7 @@ describe('BaexNav', () => {
     await new Promise((r) => queueMicrotask(r));
 
     const tab = nav.querySelector(
-      '[data-view="click-me"] .nav-btn',
+      '[data-view="click-me"]',
     ) as HTMLElement;
     tab.click();
     await new Promise((r) => queueMicrotask(r));
@@ -102,7 +102,7 @@ describe('BaexNav', () => {
     expect(viewSignal.value).toBe('click-me');
 
     tabsSignal.value = [];
-    viewSignal.value = 'home';
+    viewSignal.value = 'rag';
     document.body.removeChild(nav);
   });
 });
